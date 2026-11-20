@@ -40,6 +40,12 @@ herdr-app do app.theme --name kage
 
 then set `"mod": "agents"` to `"kage-agents"` in your layout (`$APP/layouts/<name>.json`).
 
-Back to herdr's own look: `herdr-app do app.theme --name graphite`, and set the layout's
-`"mod": "kage-agents"` back to `"agents"`. The space tiles keep their kage colors: for the
-stock ones, close herdr and delete `space.colors` from `shared.json`.
+## Uninstall
+
+Windows: `.\uninstall.ps1` with herdr-app running puts herdr's Agents list back in your
+layouts, switches to graphite and removes the kage theme and mod. Herdr keeps the space tile
+colors in memory, so to reset them close herdr-app and run `.\uninstall.ps1` once more.
+
+Elsewhere: `herdr-app do app.theme --name graphite`, set `"mod": "kage-agents"` back to
+`"agents"` in your layout, delete `$APP/mods/kage-agents`; with herdr closed, delete
+`space.colors` from `$APP/shared.json`.

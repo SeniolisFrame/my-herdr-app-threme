@@ -88,20 +88,30 @@ def rim(g, c="R"):                                       # outline: lit while aw
     return out
 
 def aura(g):
+    # violet fire: a solid glow hugging the bat, tongues of flame rising off its top edge
     out = [r[:] for r in g]
+    near = lambda y, x: any(0 <= y + dy < N and 0 <= x + dx < N and g[y + dy][x + dx] != "."
+                            for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)))
     for y in range(N):
         for x in range(N):
-            if g[y][x] == "." and any(0 <= y + dy < N and 0 <= x + dx < N and g[y + dy][x + dx] not in "."
-                                      for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1))) and (x + y) % 2:
-                out[y][x] = "B"
-    for x, y in [(4, 3), (27, 3), (2, 25), (29, 25), (15, 2), (9, 27), (22, 27)]:
-        if out[y][x] == ".": out[y][x] = "Q"
+            if g[y][x] == "." and near(y, x): out[y][x] = "B"
+    for x in range(N):
+        top = next((y for y in range(N) if out[y][x] != "."), None)
+        if top is None: continue
+        peaks = ((2, 4), (5, 6), (9, 3), (12, 6), (15, 4), (19, 6), (22, 3), (26, 6), (29, 4))
+        h = max(0, max(ph - abs(x - px) * 2 for px, ph in peaks))          # pointed tongues
+        if h == 0: continue
+        for i in range(1, h + 1):
+            y = top - i
+            if y < 0: break
+            out[y][x] = "A" if i <= max(1, h // 3) else ("B" if i < h else "V")
     return out
 
 pal = {"M": "#1d1830", "G": "#4a3d78", "F": "#2c2545", "H": "#3e3560", "R": "#9a7cff", "P": "#7a3f66",
        "E": "#ff2d55", "W": "#fff2f5", "K": "#07060c", "Z": "#5a4a3a", "A": "#b98cff", "B": "#4b3a85",
-       "Q": "#e6d6ff", "O": "#3a3060"}
-grids = {"bat-awake": aura(rim(awake())), "bat-sleep": rim(asleep(), "O")}
+       "V": "#2e2257", "O": "#3a3060"}
+down = lambda g, n: [["."] * N for _ in range(n)] + g[:N - n]       # room above for the flames
+grids = {"bat-awake": aura(down(rim(awake()), 3)), "bat-sleep": rim(asleep(), "O")}
 assert len({k.lower() for k in pal}) == len(pal), "palette letters must differ ignoring case"
 for name, g in grids.items():
     assert len(g) == N and all(len(r) == N for r in g), name
