@@ -49,6 +49,9 @@ function title(tab, l) {
   const telling = live && live !== (l?.terminal ?? l?.address) && live !== prog && !path && !live.includes("@") && live.toLowerCase() !== l?.program?.key;
   return (tab.name === prog || !tab.named) && telling ? live : tab.name;
 }
+// kage: a card goes by its terminal's folder, as the kage tab bar does; a tab name the
+// person gave stays. The third line names the program, in the space's color.
+const folder = (cwd) => cwd?.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || null;
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 // A sub-agent without a pane isn't in agents(): its raw word, error counting as
 // blocked. It's never done: it reports to its parent, and the parent's done is the news.
@@ -82,6 +85,14 @@ function icon(p, size, color) {
 // Herdr gives a new space the theme color name ("ansi6") fewest spaces use; once all are hex
 // it would always pick ansi6, so each name is swapped for the kage hue fewest spaces have.
 const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a8325e"];
+// Each space's name color, as in mods/kage-spaces (kept in step by hand): a card's program
+// line takes its space's, so agents in different spaces read apart.
+const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
+  ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
+// Headings in the 8-bit Spaces list's font at its native 16px; card text in a narrower
+// pixel font at its native 11px (both ship in mods/kage-spaces/fonts).
+const PIXEL = "PxPlus IBM VGA 8x16";
+const SMALL = "Pixelated MS Sans Serif";
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
 
 export default class Agents extends View {
@@ -293,7 +304,9 @@ export default class Agents extends View {
     // agent's own title, never an automatic tab number unless two rows would
     // otherwise read the same.
     // Read the pane snapshot once: every host read copies the whole list into JS.
-    const leads = leadPanes(panes());
+    const paneList = panes();
+    const leads = leadPanes(paneList);
+    const cwdOf = new Map(paneList.map((p) => [p.pane, p.cwd]));
     const tabs = new Map(spaces().flatMap(s => s.tabs).map(tab => [tab.id, tab]));
     const labels = new Map(list.map(a => {
       const tab = tabs.get(a.tab);
@@ -349,13 +362,16 @@ export default class Agents extends View {
       // Under a space header the space goes without saying; an automatic tab number says nothing.
       // Without a space header above (priority, pinned) the row names its space.
       const full = byPriority || isPinned;
-      const name = full ? a.space_name || label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a));
+      const tab = tabs.get(a.tab);
+      const own = tab?.named && tab.name !== a.program?.name ? tab.name : null;
+      const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? a.space_name || label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
+      const ink = NAME[(shared("space.colors") ?? {})[a.space]] ?? t.dim;
       // Bat card: hanging asleep while the agent idles, wings out and eyes glowing while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
       const face = div().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas).flex().items_center().justify_center()
         .child(image(`mods/kage-agents/bat-${asleep ? "sleep" : "awake"}.svg`).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
-      const badge = div().flex_none().px(5).h(15).rounded(3).border_1().border_color(tint).text_size(9.5).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
+      const badge = div().flex_none().px(5).h(15).rounded(3).border_1().border_color(tint).text_size(11).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
         .id(`ag-${a.address}`)
         .px(6)
@@ -382,15 +398,14 @@ export default class Agents extends View {
             this.folded.has(a.address) ? this.folded.delete(a.address) : this.folded.add(a.address);
             cx.notify();
           })).child(face))
-        .child(v_flex().flex_1().min_w(0).gap(2)
-          .child(h_flex().child(badge))
+        .child(v_flex().flex_1().min_w(0).gap(3).font_family(SMALL).text_size(11).line_height("13px")
+          .child(h_flex().gap(6).items_center().child(badge)
+            .when(Boolean(when), (r) => r.child(div().text_size(11).text_color(t.dim).child(duration(now - when)))))
           .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name))
-          .child(div().min_w(0).truncate().text_size(11).text_color(t.dim).child(full && more ? more : a.program?.name ?? "")))
+          .child(div().min_w(0).truncate().text_size(11).text_color(ink).child(a.program?.name ?? "")))
         .when(Boolean(machine), el => el.child(div().text_size(10).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
-        .when(this.hovered === a.address, el => el.child(pin))
-        .when(this.hovered !== a.address && Boolean(when), el => el.child(div().flex_none().text_size(11).text_color(t.dim).child(duration(now - when))))
-        .child(this.status(t, a, byPriority && !isPinned));
+        .when(this.hovered === a.address, el => el.child(pin));
     };
 
     // Groups in list order: spaces (grouped) or priority sections. Agents of a
@@ -423,8 +438,8 @@ export default class Agents extends View {
           open ? this.folded.add(g.id) : this.folded.delete(g.id);
           cx.notify();
         })
-        .child(div().truncate().text_color(t[g.status] ?? t.dim).child(g.label))
-        .when(byPriority || !open, (el) => el.child(div().text_color(t.dim).child(String(g.members.length))))
+        .child(div().truncate().font_family(PIXEL).text_size(16).text_color(t[g.status] ?? t.dim).child(g.label))
+        .when(byPriority || !open, (el) => el.child(div().font_family(PIXEL).text_size(16).text_color(t.dim).child(String(g.members.length))))
         .child(div().flex_1())
         .when(!open, (el) => el
           .when(!byPriority && top && top !== "idle", (el) => el.child(this.status(t, { status: top }, true)))
@@ -451,7 +466,7 @@ export default class Agents extends View {
             .flex_none()
             .items_center()
             .justify_between()
-            .child(div().text_size(11.5).font_medium().text_color(t.dim).child("Agents"))
+            .child(div().font_family(PIXEL).text_size(16).text_color(t.dim).child("AGENTS"))
             .child(
               div()
                 .id("ag-sort")

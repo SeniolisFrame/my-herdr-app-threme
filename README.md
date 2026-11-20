@@ -14,7 +14,10 @@ a red cursor. Every text color keeps at least 4.5:1 contrast on the backgrounds 
 
 A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
 eyes, one glowing with a flare, and a violet aura while the agent works or needs you; hanging
-upside down from a branch, wings wrapped round, with a "z" while it idles. It also paints the
+upside down from a branch, wings wrapped round, with a "z" while it idles. Each card is named
+after its terminal's folder, like the tabs, with the program ("Claude Code") underneath in its
+space's color. `programs.json` draws the Claude icon in violet instead of orange (install writes
+it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
 teal/orange/blue.
 
@@ -28,7 +31,8 @@ turns them into the SVGs (shown at 64px, 2x).
 A copy of herdr's Spaces list in a VGA pixel font at its native 16px: no letter tiles, each
 space's name in its own color (lightened to read on black, at least 5.9:1), a colored bar on
 the open one, no repo, branch or ahead/behind counts. The font is [PxPlus IBM VGA 8x16](https://int10h.org/oldschool-pc-fonts/) by VileR,
-CC BY-SA 4.0 (`mods/kage-spaces/fonts/LICENSE-PxPlus.txt`); Herdr ships it too.
+CC BY-SA 4.0 (`mods/kage-spaces/fonts/LICENSE-PxPlus.txt`). The agent cards' text is in
+Pixelated MS Sans Serif by lou, CC BY-SA 3.0 (`LICENSE-MSSansSerif.txt` there). Herdr ships both.
 
 ## 8-bit tab bar (mods/kage-tabs)
 

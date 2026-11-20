@@ -5,6 +5,11 @@ $app = if ($env:HERDR_APP_HOME) { $env:HERDR_APP_HOME } else { Join-Path $HOME "
 if (-not (Test-Path $app)) { throw "herdr-app folder not found: $app" }
 $status = try { & herdr-app status 2>$null | ConvertFrom-Json } catch { $null }
 
+# programs.json goes only if it is still exactly ours (the person may have added entries).
+$programs = Join-Path $app "programs.json"
+if ((Test-Path $programs) -and [IO.File]::ReadAllText($programs) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "programs.json"))) {
+  Remove-Item $programs; Write-Host "programs.json removed: the Claude icon is orange again." }
+
 # Every personal layout, not just the open one: install.ps1 may have run with another open.
 Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   $json = [IO.File]::ReadAllText($_.FullName)

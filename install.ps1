@@ -9,6 +9,11 @@ $mod = Join-Path $app "mods\kage-agents"
 New-Item -ItemType Directory -Force (Join-Path $app "themes"), $mod | Out-Null
 Copy-Item -Recurse -Force (Join-Path $PSScriptRoot "mods\kage-spaces"), (Join-Path $PSScriptRoot "mods\kage-tabs") (Join-Path $app "mods")
 Copy-Item (Join-Path $PSScriptRoot "themes\*.json") (Join-Path $app "themes") -Force
+# programs.json may hold the person's own entries: write it only when there is none.
+$programs = Join-Path $app "programs.json"
+if (-not (Test-Path $programs)) { Copy-Item (Join-Path $PSScriptRoot "programs.json") $programs }
+elseif ([IO.File]::ReadAllText($programs) -ne [IO.File]::ReadAllText((Join-Path $PSScriptRoot "programs.json"))) {
+  Write-Host "programs.json exists: add the claude entry from $PSScriptRoot\programs.json by hand for the violet Claude icon." }
 Copy-Item (Join-Path $PSScriptRoot "mods\kage-agents\*"), (Join-Path $PSScriptRoot "avatars\bat-*.svg") $mod -Force
 $ErrorActionPreference = "Continue"
 & herdr-app do app.theme --name kage 2>&1 | Out-Null
