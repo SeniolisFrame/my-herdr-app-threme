@@ -4,7 +4,7 @@ param($json, $out)
 Add-Type -AssemblyName System.Drawing
 $d = Get-Content $json -Raw | ConvertFrom-Json
 $names = $d.avatars.PSObject.Properties.Name
-$scale = 8; $cell = 16 * $scale; $pad = 24
+$scale = 8; $size = $d.avatars.($names[0]).Count; $cell = $size * $scale; $pad = 24
 $bmp = New-Object System.Drawing.Bitmap ([int]($names.Count * ($cell + $pad) + $pad)), ([int]($cell + 2 * $pad + 24))
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.Clear([System.Drawing.ColorTranslator]::FromHtml("#050408"))
@@ -12,7 +12,7 @@ $font = New-Object System.Drawing.Font("Consolas", 12)
 $x0 = $pad
 foreach ($n in $names) {
   $rows = $d.avatars.$n
-  for ($y = 0; $y -lt 16; $y++) { for ($x = 0; $x -lt 16; $x++) {
+  for ($y = 0; $y -lt $size; $y++) { for ($x = 0; $x -lt $size; $x++) {
     $ch = [string]$rows[$y][$x]
     if ($ch -eq ".") { continue }
     $brush = New-Object System.Drawing.SolidBrush ([System.Drawing.ColorTranslator]::FromHtml($d.palette.$ch))
