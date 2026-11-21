@@ -1,4 +1,4 @@
-﻿# Bat, 32x32. Awake: wings spread, red eyes, fangs, a violet aura. Asleep: hanging upside
+# Bat, 32x32. Awake: wings spread, red eyes, fangs, a violet aura. Asleep: hanging upside
 # down from a branch, wings wrapped round, eyes shut, a "z" drifting up.
 # python avatars/draw.py avatars/avatars.json, then node avatars/build.mjs
 # Palette letters must differ ignoring case (preview.ps1 reads them with ConvertFrom-Json).
@@ -121,7 +121,7 @@ pal = {"M": "#1d1830", "G": "#4a3d78", "F": "#2c2545", "H": "#3e3560", "R": "#9a
 down = lambda g, n: [["."] * N for _ in range(n)] + g[:N - n]       # room above for the flames
 # Awake flaps: wings up, halfway, down (the mod steps up, mid, down, mid).
 grids = {"bat-awake": aura(down(rim(awake()), 3)), "bat-awake-mid": aura(down(rim(awake(0.7)), 3)),
-         "bat-awake-down": aura(down(rim(awake(1.3)), 3)), "bat-sleep": rim(asleep(), "O"),
+         "bat-awake-down": aura(down(rim(awake(1.0)), 3)), "bat-sleep": rim(asleep(), "O"),
          "bat-sleep-1": rim(asleep(1), "O"), "bat-sleep-2": rim(asleep(2), "O")}
 assert len({k.lower() for k in pal}) == len(pal), "palette letters must differ ignoring case"
 for name, g in grids.items():

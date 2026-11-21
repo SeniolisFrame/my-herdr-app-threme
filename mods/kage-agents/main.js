@@ -108,7 +108,11 @@ export default class Agents extends View {
     this.migratingPins = new Set();
     cx.timer.every(30000, (cx) => cx.notify());
     // Awake bats flap 4 times a second; asleep, the z's step every 750ms. No bats, no redraws.
-    cx.timer.every(250, (cx) => { if (this.awake || (this.asleep && Math.floor(Date.now() / 750) % 3 !== this.snore)) cx.notify(); });
+    // Checked twice per step and redrawn only when the step changes, so a late tick can't skip one.
+    cx.timer.every(125, (cx) => {
+      const now = Date.now();
+      if ((this.awake && Math.floor(now / 250) % 4 !== this.step) || (this.asleep && Math.floor(now / 750) % 3 !== this.snore)) cx.notify();
+    });
   }
 
   // Stamps agents whose state changed. Done and idle count as one: looking at a
@@ -258,7 +262,7 @@ export default class Agents extends View {
     this.snore = Math.floor(now / 750) % 3;
     // The awake art leaves 2 empty art rows (4px) above and below, room to hover in.
     // Wings beat up, mid, down, mid; the downstroke lifts the bat highest.
-    const step = Math.floor(now / 250) % 4;
+    const step = this.step = Math.floor(now / 250) % 4;
     const bob = [0, -2, -4, -2][step], wings = ["awake", "awake-mid", "awake-down", "awake-mid"][step];
     // A kept sub-agent (one with a pane) is in agents() too: where a tree shows
     // it, it gets no row of its own, unless it's pinned.

@@ -13,8 +13,8 @@ a red cursor. Every text color keeps at least 4.5:1 contrast on the backgrounds 
 ## Bat cards (mods/kage-agents)
 
 A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
-eyes, one glowing with a flare, and a violet aura while the agent works or needs you; hanging
-upside down from a branch, wings wrapped round, with a "z" while it idles. Each card is named
+eyes, one glowing with a flare, and a violet aura, flapping, while the agent works or needs you;
+hanging upside down from a branch, wings wrapped round, with z's rising while it idles. Each card is named
 after its terminal's folder, like the tabs, with the program ("Claude Code") underneath in its
 space's color. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
