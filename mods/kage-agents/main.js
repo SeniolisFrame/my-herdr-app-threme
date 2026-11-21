@@ -107,6 +107,8 @@ export default class Agents extends View {
     if (!this.pendingPins.length) localStorage.removeItem("pins");
     this.migratingPins = new Set();
     cx.timer.every(30000, (cx) => cx.notify());
+    // Awake bats flap 4 times a second; asleep, the z's step every 750ms. No bats, no redraws.
+    cx.timer.every(250, (cx) => { if (this.awake || (this.asleep && Math.floor(Date.now() / 750) % 3 !== this.snore)) cx.notify(); });
   }
 
   // Stamps agents whose state changed. Done and idle count as one: looking at a
@@ -252,6 +254,12 @@ export default class Agents extends View {
     const shown = focused()?.agent;
     const now = Date.now();
     this.track(list, now);
+    this.awake = this.asleep = false;
+    this.snore = Math.floor(now / 750) % 3;
+    // The awake art leaves 2 empty art rows (4px) above and below, room to hover in.
+    // Wings beat up, mid, down, mid; the downstroke lifts the bat highest.
+    const step = Math.floor(now / 250) % 4;
+    const bob = [0, -2, -4, -2][step], wings = ["awake", "awake-mid", "awake-down", "awake-mid"][step];
     // A kept sub-agent (one with a pane) is in agents() too: where a tree shows
     // it, it gets no row of its own, unless it's pinned.
     const nested = new Set(collapsed ? [] : list.flatMap((a) => this.tree(all, a.address).map((s) => s.t.address)));
@@ -368,8 +376,9 @@ export default class Agents extends View {
       const ink = NAME[(shared("space.colors") ?? {})[a.space]] ?? t.dim;
       // Bat card: hanging asleep while the agent idles, wings out and eyes glowing while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
-      const face = div().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas).flex().items_center().justify_center()
-        .child(image(`mods/kage-agents/bat-${asleep ? "sleep" : "awake"}.svg`).w(64).h(64));
+      if (asleep) this.asleep = true; else this.awake = true;
+      const face = div().relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
+        .child(image(`mods/kage-agents/bat-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(15).rounded(3).border_1().border_color(tint).text_size(11).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()

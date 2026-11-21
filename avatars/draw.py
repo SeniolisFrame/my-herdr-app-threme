@@ -1,4 +1,4 @@
-# Bat, 32x32. Awake: wings spread, red eyes, fangs, a violet aura. Asleep: hanging upside
+﻿# Bat, 32x32. Awake: wings spread, red eyes, fangs, a violet aura. Asleep: hanging upside
 # down from a branch, wings wrapped round, eyes shut, a "z" drifting up.
 # python avatars/draw.py avatars/avatars.json, then node avatars/build.mjs
 # Palette letters must differ ignoring case (preview.ps1 reads them with ConvertFrom-Json).
@@ -13,20 +13,23 @@ def tri(x, y, a, b, c):
 
 def blank(): return [["."] * N for _ in range(N)]
 
-def awake():
+def awake(droop=0.0):
+    # droop: how far the wing tips swing down, per column from the shoulder (0 = raised)
     g = blank()
-    for y in range(N):
+    for y0 in range(N):
         for x in range(N):
             fx = x if x < CX else 31 - x                 # left half, mirrored
+            y = y0 - max(0, 12 - fx) * droop             # shear the wing about the shoulder
             # wing: top edge rises from the shoulder to the tip, bottom edge in three scallops
             top = 12.5 - (12 - fx) * 0.62
             scallop = 2.6 * abs(math.sin(math.pi * (fx - 1) / 3.75))
             bottom = 21.5 - (12 - fx) * 0.45 - scallop
-            if 1 <= fx <= 12 and top <= y <= bottom: g[y][x] = "M"
+            if 1 <= fx <= 12 and top <= y <= bottom: g[y0][x] = "M"
             # finger bones from the shoulder to the scallop points
             for px, py in ((1.2, 5.2), (4.8, 15.1), (8.5, 17.2)):
                 t = (fx - 12) / (px - 12) if px != 12 else 0
-                if 0 <= t <= 1 and abs(y - (13 + t * (py - 13))) < 0.6 and g[y][x] == "M": g[y][x] = "G"
+                if 0 <= t <= 1 and abs(y - (13 + t * (py - 13))) < 0.6 and g[y0][x] == "M": g[y0][x] = "G"
+            y = y0                                       # the body doesn't swing
             if ell(x, y, CX, 18, 4.3, 5.8): g[y][x] = "F"
             if ell(x, y, CX, 19, 2.3, 3.6): g[y][x] = "H"   # belly
             if ell(x, y, CX, 11.5, 4.6, 4.1): g[y][x] = "F"
@@ -47,9 +50,10 @@ def awake():
     for x in (13, 18): g[24][x] = g[25][x] = "K"         # feet
     return g
 
-def asleep():
+def asleep(f=0):
+    # f: snore frame 0-2
     g = blank()
-    for x in range(3, 29): g[2][x] = "Z"                 # the branch
+    for x in range(3, 27): g[2][x] = "Z"                 # the branch
     for x in (6, 11, 20, 25): g[1][x] = "Z"
     g[3][9] = g[3][24] = "Z"
     for x in (13, 18):                                   # feet gripping it
@@ -73,9 +77,13 @@ def asleep():
     def stamp(x0, y0, rows):
         for dy, row in enumerate(rows):
             for dx, c in enumerate(row):
-                if c != ".": g[y0 + dy][x0 + dx] = "A"
-    stamp(24, 11, ["AAAAA", "...A.", "..A..", ".A...", "AAAAA"])  # z
-    stamp(29, 7, ["A"]); stamp(28, 4, ["A"])               # sparks trailing it
+                if c != ".": g[y0 + dy][x0 + dx] = c
+    # snoring: each frame the z's rise a step and a smaller one comes out below
+    big = ["YYYYYY", "....Y.", "...Y..", "..Y...", ".Y....", "YYYYYY"]
+    mid = ["YYYYY", "...Y.", "..Y..", ".Y...", "YYYYY"]
+    small = ["YYYY", "..Y.", ".Y..", "YYYY"]
+    for zx, zy, z in ([(23, 15, big)], [(25, 8, big), (23, 16, mid)], [(26, 3, big), (24, 10, mid), (23, 16, small)])[f]:
+        stamp(zx, zy, z)
     return g
 
 def rim(g, c="R"):                                       # outline: lit while awake, dark asleep
@@ -109,9 +117,12 @@ def aura(g):
 
 pal = {"M": "#1d1830", "G": "#4a3d78", "F": "#2c2545", "H": "#3e3560", "R": "#9a7cff", "P": "#7a3f66",
        "E": "#ff2d55", "W": "#fff2f5", "K": "#07060c", "Z": "#5a4a3a", "A": "#b98cff", "B": "#4b3a85",
-       "V": "#2e2257", "O": "#3a3060"}
+       "V": "#2e2257", "O": "#3a3060", "Y": "#e4d6ff"}
 down = lambda g, n: [["."] * N for _ in range(n)] + g[:N - n]       # room above for the flames
-grids = {"bat-awake": aura(down(rim(awake()), 3)), "bat-sleep": rim(asleep(), "O")}
+# Awake flaps: wings up, halfway, down (the mod steps up, mid, down, mid).
+grids = {"bat-awake": aura(down(rim(awake()), 3)), "bat-awake-mid": aura(down(rim(awake(0.7)), 3)),
+         "bat-awake-down": aura(down(rim(awake(1.3)), 3)), "bat-sleep": rim(asleep(), "O"),
+         "bat-sleep-1": rim(asleep(1), "O"), "bat-sleep-2": rim(asleep(2), "O")}
 assert len({k.lower() for k in pal}) == len(pal), "palette letters must differ ignoring case"
 for name, g in grids.items():
     assert len(g) == N and all(len(r) == N for r in g), name
