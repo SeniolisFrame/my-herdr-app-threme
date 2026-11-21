@@ -18,7 +18,7 @@
     "border": "#2d2445",
     "input": "#3d3060",
     "muted": "#aca3cc",
-    "dim": "#857ca9",
+    "dim": "#9087b6",
     "accent": "#b98cff",
     "accent_foreground": "#120e1d",
     "solid": "#c4224a",
@@ -26,7 +26,7 @@
     "working": "#b98cff",
     "blocked": "#ff9f5a",
     "done": "#5fe3ad",
-    "idle": "#857ca9",
+    "idle": "#9087b6",
     "unknown": "#6c6488"
   }
 }

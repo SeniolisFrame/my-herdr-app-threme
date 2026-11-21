@@ -23,4 +23,11 @@ Assert ([IO.File]::ReadAllText($tmp) -eq $after) "running twice changes nothing"
 $f = Find-Frame (Set-PaneFrame $after 10 1 | ConvertFrom-Json)
 Assert ($f.radius -eq 10 -and $f.border.width -eq 1) "Set-PaneFrame 10 1 restores"
 Remove-Item $tmp
+
+# Every theme file of the repo can be picked with install.ps1 -Theme (kage, or kage-<name>).
+$set = [regex]::Match([IO.File]::ReadAllText((Join-Path $PSScriptRoot "install.ps1")), 'ValidateSet\(([^)]*)\)').Groups[1].Value
+Get-ChildItem (Join-Path $PSScriptRoot "themes") | ForEach-Object {
+  $n = $_.BaseName -replace "^kage-", ""
+  Assert ($set -match "`"$n`"") "install.ps1 -Theme lists $n"
+}
 "ok"

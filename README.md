@@ -10,6 +10,27 @@ A near-black theme: the background, sidebars and cards are black with a trace of
 violet only marks what is picked, the borders and the accent; crimson for the main buttons,
 a red cursor. Every text color keeps at least 4.5:1 contrast on the backgrounds it sits on.
 
+## More colors
+
+Same layout, other colors: `.\install.ps1 -Theme <name>`, back with `.\install.ps1`. The theme files are `kage-<name>.json`, so they cannot clash with one of your own.
+
+| name | looks |
+|---|---|
+| midnight | navy with gold buttons |
+| sakura | black-plum with pink |
+| forest | deep green with emerald, amber buttons |
+| ember | warm brown-black with orange |
+| ocean | deep teal with cyan, amber buttons |
+
+Text colors keep at least 4.5:1 contrast on the backgrounds.
+
+Pick the avatar in the Agents list, not in the theme: its top-right button (the sort one) opens a menu with
+Sort agents and Avatar, Bat or Witch, and either works with either theme. The witch is a cute girl with long pink hair
+(staff orb pulsing and sparks while the agent works, dozing under her hat with z's while it idles), drawn by `avatars/witch.py`.
+Herdr's Settings has no place for mods, hence the menu.
+
+![witch](avatars/witch-preview.png)
+
 ## Bat cards (mods/kage-agents)
 
 A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
@@ -60,7 +81,7 @@ macOS / Linux:
 ```sh
 APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
 mkdir -p "$APP/themes" "$APP/mods/kage-agents"
-cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/bat-*.svg "$APP/mods/kage-agents/"
+cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/*.svg "$APP/mods/kage-agents/"
 cp -r mods/kage-spaces mods/kage-tabs mods/kage-pane "$APP/mods/"
 herdr-app do app.theme --name kage
 ```

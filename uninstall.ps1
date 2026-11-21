@@ -22,9 +22,11 @@ Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   if ($new -ne $json) { [IO.File]::WriteAllText($_.FullName, $new); Write-Host "Layout $($_.BaseName): Agents, Spaces, tab bar and pane frames restored." }
 }
 
+# Every theme of this repo leaves with it.
+$themes = @(Get-ChildItem (Join-Path $PSScriptRoot "themes") | ForEach-Object { Join-Path $app "themes\$($_.Name)" })
 if ($status) {
   & herdr-app do app.theme --name graphite 2>&1 | Out-Null
-  Remove-Item -Recurse -Force (Join-Path $app "mods\kage-agents"), (Join-Path $app "mods\kage-spaces"), (Join-Path $app "mods\kage-tabs"), (Join-Path $app "mods\kage-pane"), (Join-Path $app "themes\kage.json") -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force ($themes + @("kage-agents", "kage-spaces", "kage-tabs", "kage-pane" | ForEach-Object { Join-Path $app "mods\$_" })) -ErrorAction SilentlyContinue
   Write-Host "Theme back to graphite; kage theme and mod removed."
   Write-Host "Space tiles keep their kage colors until you close herdr-app and run this again."
 } else {

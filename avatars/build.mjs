@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const dir = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
-const { palette, avatars } = JSON.parse(fs.readFileSync(path.join(dir, "avatars.json"), "utf8"));
+for (const file of ["avatars.json", "witch.json"]) {
+const { palette, avatars } = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
 for (const [name, rows] of Object.entries(avatars)) {
   const n = rows.length;
   if (rows.some((r) => r.length !== n)) throw new Error(`${name}: not square`);
@@ -17,3 +18,4 @@ for (const [name, rows] of Object.entries(avatars)) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${n * 4}" height="${n * 4}" viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges">\n${rects.join("\n")}\n</svg>\n`);
 }
 console.log(Object.keys(avatars).join(" "));
+}

@@ -64,6 +64,9 @@ const SORTS = [
   { id: "grouped", label: "Grouped by space", icon: "layers" },
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
+// The card's avatar (art in this folder as <id>-awake*.svg and <id>-sleep*.svg), picked in the sort popup.
+const PETS = [{ id: "bat", label: "Bat" }, { id: "witch", label: "Witch" }];
+const petOf = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "bat";
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
@@ -161,29 +164,31 @@ export default class Agents extends View {
   }
 
   sortMenu(t) {
-    const on = sortOf().id;
+    const row = (id, label, icon, on, pick) => h_flex()
+      .id(id)
+      .h(31)
+      .px(8)
+      .gap(9)
+      .rounded(7)
+      .items_center()
+      .text_color(t.foreground)
+      .hover((el) => el.bg(t.hover))
+      .on_click(() => { pick(); closeOverlay(props().overlay); })
+      .child(icon)
+      .child(div().flex_1().child(label))
+      .when(on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)));
+    const head = (text, pt) => div().px(8).pt(pt).pb(6).text_size(11).text_color(t.dim).child(text);
     return v_flex()
       .w_full()
       .p(5)
       .bg(t.popover)
       .text_size(12.8)
-      .child(div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child("Sort agents"))
-      .children(SORTS.map((s) => h_flex()
-        .id(`sort-${s.id}`)
-        .h(31)
-        .px(8)
-        .gap(9)
-        .rounded(7)
-        .items_center()
-        .text_color(t.foreground)
-        .hover((el) => el.bg(t.hover))
-        .on_click(() => {
-          setShared("agents.sort", s.id);
-          closeOverlay(props().overlay);
-        })
-        .child(svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted))
-        .child(div().flex_1().child(s.label))
-        .when(s.id === on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)))));
+      .child(head("Sort agents", 4))
+      .children(SORTS.map((s) => row(`sort-${s.id}`, s.label, svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted),
+        s.id === sortOf().id, () => setShared("agents.sort", s.id))))
+      .child(head("Avatar", 8))
+      .children(PETS.map((p) => row(`pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep.svg`).w(18).h(18).flex_none(),
+        p.id === petOf(), () => setShared("agents.pet", p.id))));
   }
 
   peek(addr) {
@@ -382,7 +387,7 @@ export default class Agents extends View {
       const asleep = !LABEL[a.status] || a.status === "idle";
       if (asleep) this.asleep = true; else this.awake = true;
       const face = div().relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/bat-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
+        .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(15).rounded(3).border_1().border_color(tint).text_size(11).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
@@ -486,8 +491,8 @@ export default class Agents extends View {
                 .text_size(11)
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
-                .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 140, props: { sortMenu: true } }))
-                .tooltip(`Sort agents: ${sort.label}`)
+                .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { sortMenu: true } }))
+                .tooltip(`Sort agents: ${sort.label}; avatar`)
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
         ),
