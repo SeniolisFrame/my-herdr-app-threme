@@ -15,7 +15,7 @@ a red cursor. Every text color keeps at least 4.5:1 contrast on the backgrounds 
 A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
 eyes, one glowing with a flare, and a violet aura, flapping, while the agent works or needs you;
 hanging upside down from a branch, wings wrapped round, with z's rising while it idles. Each card is named
-after its terminal's folder, like the tabs, with the program ("Claude Code") underneath in its
+after its terminal's folder, like the tabs, with its space's name underneath in that
 space's color. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
@@ -40,11 +40,20 @@ Herdr's tab bar in the same pixel font: each tab named after its terminal's fold
 gave a tab stays), no program icons, the open tab in the open space's name color with a line
 under it.
 
+## 8-bit pane frames (mods/kage-pane)
+
+Each terminal pane (PowerShell, Claude Code, ...) gets square corners and a 2px border, violet
+while it has the keyboard, and a header in the same pixel font: program, title, folder,
+the agent's status, and split/zoom/close buttons on hover.
+
 ## Install
 
 Windows: `.\install.ps1` (with herdr-app running). It copies the theme and the mod, switches to kage, and points
-your current layout's Agents block at `kage-agents`. Herdr's own layouts (main, terminals,
+your current layout at the kage mods, with square 2px pane frames. Herdr's own layouts (main, terminals,
 win98) are read-only: clone one first (`herdr-app do layout.clone`), then run it again.
+It also leaves `kage-layout.ps1` in herdr-app's `after-layout` folder: an installer that
+rewrites a layout (my-herdr-app's does) runs it afterwards, so kage stays without a second install. `.\kage-layout.test.ps1`
+checks it on a copy of herdr's main layout.
 
 macOS / Linux:
 
@@ -52,18 +61,19 @@ macOS / Linux:
 APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
 mkdir -p "$APP/themes" "$APP/mods/kage-agents"
 cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/bat-*.svg "$APP/mods/kage-agents/"
-cp -r mods/kage-spaces mods/kage-tabs "$APP/mods/"
+cp -r mods/kage-spaces mods/kage-tabs mods/kage-pane "$APP/mods/"
 herdr-app do app.theme --name kage
 ```
 
-then set `"mod": "agents"` to `"kage-agents"` `"spaces"` to `"kage-spaces"` and `"tabs"` to `"kage-tabs"` in your layout (`$APP/layouts/<name>.json`).
+then set `"mod": "agents"` to `"kage-agents"` `"spaces"` to `"kage-spaces"` and `"tabs"` to `"kage-tabs"` in your layout (`$APP/layouts/<name>.json`); for the pane frames,
+`"pane"` to `"kage-pane"`, the pane frame's `radius` to 0 and its border and focus `width` to 2.
 
 ## Uninstall
 
-Windows: `.\uninstall.ps1` with herdr-app running puts herdr's Agents and Spaces lists and
-tab bar back in your layouts, switches to graphite and removes the kage theme and mod. Herdr keeps the space tile
+Windows: `.\uninstall.ps1` with herdr-app running puts herdr's Agents and Spaces lists,
+tab bar and pane frames (rounded 10, 1px) back in your layouts, switches to graphite and removes the kage theme, mods and its `after-layout` script. Herdr keeps the space tile
 colors in memory, so to reset them close herdr-app and run `.\uninstall.ps1` once more.
 
-Elsewhere: `herdr-app do app.theme --name graphite`, set `"kage-agents"`/`"kage-spaces"`/`"kage-tabs"`
-back to `"agents"`/`"spaces"`/`"tabs"` in your layout, delete those three `$APP/mods/kage-*` folders; with herdr closed, delete
+Elsewhere: `herdr-app do app.theme --name graphite`, set `"kage-agents"`/`"kage-spaces"`/`"kage-tabs"`/`"kage-pane"`
+back to `"agents"`/`"spaces"`/`"tabs"`/`"pane"` in your layout (pane frame `radius` 10, widths 1), delete the `$APP/mods/kage-*` folders; with herdr closed, delete
 `space.colors` from `$APP/shared.json`.

@@ -50,7 +50,7 @@ function title(tab, l) {
   return (tab.name === prog || !tab.named) && telling ? live : tab.name;
 }
 // kage: a card goes by its terminal's folder, as the kage tab bar does; a tab name the
-// person gave stays. The third line names the program, in the space's color.
+// person gave stays. The third line names the space, in its color.
 const folder = (cwd) => cwd?.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || null;
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 // A sub-agent without a pane isn't in agents(): its raw word, error counting as
@@ -376,7 +376,7 @@ export default class Agents extends View {
       const full = byPriority || isPinned;
       const tab = tabs.get(a.tab);
       const own = tab?.named && tab.name !== a.program?.name ? tab.name : null;
-      const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? a.space_name || label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
+      const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
       const ink = NAME[(shared("space.colors") ?? {})[a.space]] ?? t.dim;
       // Bat card: hanging asleep while the agent idles, wings out and eyes glowing while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
@@ -415,7 +415,7 @@ export default class Agents extends View {
           .child(h_flex().gap(6).items_center().child(badge)
             .when(Boolean(when), (r) => r.child(div().text_size(11).text_color(t.dim).child(duration(now - when)))))
           .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name))
-          .child(div().min_w(0).truncate().text_size(11).text_color(ink).child(a.program?.name ?? "")))
+          .child(div().min_w(0).truncate().text_size(11).text_color(ink).child(a.space_name ?? "")))
         .when(Boolean(machine), el => el.child(div().text_size(10).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));

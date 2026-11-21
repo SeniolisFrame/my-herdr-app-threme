@@ -3,6 +3,9 @@
 # so the space tile colors can only be reset while it is closed: run this again then.
 $app = if ($env:HERDR_APP_HOME) { $env:HERDR_APP_HOME } else { Join-Path $HOME ".config\herdr-app" }
 if (-not (Test-Path $app)) { throw "herdr-app folder not found: $app" }
+. (Join-Path $PSScriptRoot "kage-layout.ps1")
+# No more kage after another installer rewrites a layout.
+Remove-Item (Join-Path $app "after-layout\kage.ps1") -ErrorAction SilentlyContinue
 $status = try { & herdr-app status 2>$null | ConvertFrom-Json } catch { $null }
 
 # programs.json goes only if it is still exactly ours (the person may have added entries).
@@ -14,16 +17,18 @@ if ((Test-Path $programs) -and [IO.File]::ReadAllText($programs) -eq [IO.File]::
 Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   $json = [IO.File]::ReadAllText($_.FullName)
   $new = $json -replace '("mod":\s*)"kage-agents"', '$1"agents"' -replace '("mod":\s*)"kage-spaces"', '$1"spaces"' -replace '("mod":\s*)"kage-tabs"', '$1"tabs"'
-  if ($new -ne $json) { [IO.File]::WriteAllText($_.FullName, $new); Write-Host "Layout $($_.BaseName): Agents, Spaces and tab bar restored." }
+  # Pane frames back to herdr's own (as in its main layout): rounded 10, 1px border.
+  if ($new -match '"kage-pane"') { $new = Set-PaneFrame ($new -replace '("mod":\s*)"kage-pane"', '$1"pane"') 10 1 }
+  if ($new -ne $json) { [IO.File]::WriteAllText($_.FullName, $new); Write-Host "Layout $($_.BaseName): Agents, Spaces, tab bar and pane frames restored." }
 }
 
 if ($status) {
   & herdr-app do app.theme --name graphite 2>&1 | Out-Null
-  Remove-Item -Recurse -Force (Join-Path $app "mods\kage-agents"), (Join-Path $app "mods\kage-spaces"), (Join-Path $app "mods\kage-tabs"), (Join-Path $app "themes\kage.json") -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force (Join-Path $app "mods\kage-agents"), (Join-Path $app "mods\kage-spaces"), (Join-Path $app "mods\kage-tabs"), (Join-Path $app "mods\kage-pane"), (Join-Path $app "themes\kage.json") -ErrorAction SilentlyContinue
   Write-Host "Theme back to graphite; kage theme and mod removed."
   Write-Host "Space tiles keep their kage colors until you close herdr-app and run this again."
 } else {
-  Remove-Item -Recurse -Force (Join-Path $app "mods\kage-agents"), (Join-Path $app "mods\kage-spaces"), (Join-Path $app "mods\kage-tabs") -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force (Join-Path $app "mods\kage-agents"), (Join-Path $app "mods\kage-spaces"), (Join-Path $app "mods\kage-tabs"), (Join-Path $app "mods\kage-pane") -ErrorAction SilentlyContinue
   # Herdr is closed: drop the kage hex colors so it hands out its own again on the next start.
   $file = Join-Path $app "shared.json"
   if (Test-Path $file) {
