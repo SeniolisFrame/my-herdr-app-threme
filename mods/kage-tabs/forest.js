@@ -1,7 +1,7 @@
 import { div, image } from "gpui-kit";
 
 // kage: a twilight forest behind the whole tab bar. Every working agent is a class-character swinging at the dragon,
-// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 96x68 dragon made from a reference drawing),
+// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 96x68 dragon),
 // all drawn at 2.5x so the party and the boss share one pixel size.
 const ART = "mods/kage-agents/";
 const MAX = 4;                                   // characters shown; more show as "+N"
@@ -41,9 +41,9 @@ export function arena(party, now, color) {
       .children(shown.map((p, i) => image(`${ART}${p.cls}-${frames[i]}.svg`).absolute()
         .left(dx - 24 - (shown.length - i) * STEP + (frames[i] === "awake-down" ? 14 : 0)).top(top(CHAR)).w(CHAR).h(CHAR)))
       .when(party.length > MAX, el => el.child(div().absolute().left(dx - 24 - (MAX + 1) * STEP + 20).top(top(CHAR) - 22).text_size(16).text_color(color).child(`+${party.length - MAX}`)))
-      // Its breath: a wavy stream of flames out of the maw (62px right, 95px down in the art) toward the party.
+      // Its breath: a wavy stream of flames out of the maw (10px right, 84px down in the art) toward the party.
       .when(dragon === "dragon-attack", el => el.children([0, 1, 2, 3, 4].map((k) => div().absolute()
-        .left(dx + 62 - 30 * (k + 1)).top(top(DRAGON_H) + 95 - (24 - k * 3) / 2 + [0, -5, 2, -4, 3][(k + beat) % 5]).w(30).h(24 - k * 3)
+        .left(dx + 10 - 30 * (k + 1)).top(top(DRAGON_H) + 84 - (24 - k * 3) / 2 + [0, -5, 2, -4, 3][(k + beat) % 5]).w(30).h(24 - k * 3)
         .bg(["#fff3a0", "#ffd23f", "#ffb02e", "#ff6a1a", "#b83a1a"][k]))))
       .child(image(`${ART}${dragon}.svg`).absolute().left(dx).top(top(DRAGON_H)).w(DRAGON_W).h(DRAGON_H)));
 }

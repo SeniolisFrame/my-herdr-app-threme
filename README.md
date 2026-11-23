@@ -41,7 +41,7 @@ with nobody working the dragon sleeps. The Agents list's top-right button (the s
 for mods, hence the menu.
 
 Art: `python avatars/forest.py mods/kage-tabs/forest-bg.png` (the backdrop), `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
-one json each) and `python avatars/dragon_ref.py <reference image> avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
+one json each) and `python avatars/dragon_draw.py avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
 turns them into the SVGs (32x32 shown at 80px, the 96x68 dragon at 240x170px, both 2.5x).
 
 ## 8-bit spaces (mods/kage-spaces)
