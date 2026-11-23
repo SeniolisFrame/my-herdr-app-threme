@@ -1,6 +1,6 @@
 import { div, image } from "gpui-kit";
 
-// kage: a forest behind the whole tab bar. Every working agent is a class-character swinging at the dragon,
+// kage: a twilight forest behind the whole tab bar. Every working agent is a class-character swinging at the dragon,
 // which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 96x68 dragon made from a reference drawing),
 // all drawn at 2.5x so the party and the boss share one pixel size.
 const ART = "mods/kage-agents/";
@@ -11,30 +11,15 @@ export const PLAIN = 42;                         // and with it off
 
 const SWING = ["awake", "awake-mid", "awake-down", "awake-mid"];
 
-// A pixel pine: trunk and four tiers, its foot at `base` from the bar's top.
-const pine = (x, base, s, leaf, trunk) => {
-  const tiers = [46, 36, 26, 14];
-  const h = 14 * s;
-  return div().absolute().left(x).top(base - 12 * s - h * tiers.length).w(46 * s).h(12 * s + h * tiers.length)
-    .children(tiers.map((w, i) => div().absolute().left((46 - w) * s / 2).top(i * h).w(w * s).h(h).bg(leaf)))
-    .child(div().absolute().left(20 * s).top(h * tiers.length).w(6 * s).h(12 * s).bg(trunk));
-};
-
-// Forest and floor, absolute behind everything in the bar. Far pines (dark, small), near pines (lit), fireflies, a moon.
+// The forest, absolute behind everything in the bar: a misty twilight pine forest drawn by avatars/forest.py
+// (mods/kage-tabs/forest-bg.png, 1920x180, centred; a wider bar shows plain dark at the sides), and drifting motes of light.
 export function backdrop(now) {
   const beat = Math.floor(now / 250);
-  const ground = HEIGHT - FLOOR;
-  const far = Array.from({ length: 30 }, (_v, i) => pine(i * 88 + (i % 3) * 14, ground - 4, 1, "#0f2d22", "#1a1f1a"));
-  const near = Array.from({ length: 14 }, (_v, i) => pine(i * 190 + 60 + (i % 4) * 22, ground + 2, 2, "#17452d", "#33261a"));
-  const fly = (x, y, i) => (beat + i) % 4 < 2 ? div().absolute().left(x + ((beat + i) % 8 < 4 ? 0 : 6)).top(y).w(4).h(4).bg("#e6ff7a") : null;
-  const flies = [[300, 60], [520, 100], [760, 40], [1010, 90], [1290, 55], [1540, 105], [1800, 70]].map(([x, y], i) => fly(x, y, i)).filter(Boolean);
-  return div().absolute().left(0).right(0).top(0).bottom(0).overflow_hidden().bg("#0b1a1e")
-    .child(div().absolute().left(1400).top(14).w(26).h(26).rounded(13).bg("#e8f0c8"))
-    .child(div().absolute().left(1410).top(14).w(20).h(20).rounded(10).bg("#0b1a1e"))
-    .children(far).children(near).children(flies)
-    .child(div().absolute().left(0).right(0).bottom(0).h(FLOOR).bg("#1c3a24"))
-    .child(div().absolute().left(0).right(0).bottom(FLOOR).h(3).bg("#46963f"))
-    .children(Array.from({ length: 60 }, (_v, i) => div().absolute().left(i * 41 + 5).bottom(FLOOR + 3).w(3).h(i % 2 ? 6 : 9).bg("#2f7a3e")));
+  const mote = (x, y, i) => (beat + i) % 6 < 3 ? div().absolute().left(x + ((beat + i) % 12 < 6 ? 0 : 6)).top(y + ((beat + i) % 8 < 4 ? 0 : 3)).w(4).h(4).bg("#bfe8ff") : null;
+  const motes = [[300, 70], [520, 100], [760, 50], [1010, 90], [1290, 60], [1540, 105], [1800, 75]].map(([x, y], i) => mote(x, y, i)).filter(Boolean);
+  return div().absolute().left(0).right(0).top(0).bottom(0).overflow_hidden().bg("#0a1226").flex().justify_center()
+    .child(image("mods/kage-tabs/forest-bg.png").flex_none().w(1920).h(180))
+    .children(motes);
 }
 
 // party: [{ id, cls }] of working agents; now: Date.now(). A full-bar layer under the tabs (so tabs stay clickable);
