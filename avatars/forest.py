@@ -1,5 +1,5 @@
-# The tab bar's backdrop: a misty twilight pine forest in layers (pale far trees fading into a glowing mist, darker mid trees,
-# near trees, black foreground trunks with branches), a lit path in the middle where the fight happens.
+# The tab bar's backdrop: a misty twilight pine forest in layers (pale far trees fading into a dim mist, darker mid trees,
+# near trees, black foreground trunks with branches). Trees all the way across: no bright clearing in the middle.
 # 640x60 art pixels, written 3x as a PNG (1920x180). python avatars/forest.py mods/kage-tabs/forest-bg.png
 import math, random, sys
 from PIL import Image, ImageDraw
@@ -18,7 +18,7 @@ px = img.load()
 for y in range(H):
     for x in range(W):
         d = math.hypot((x - 320) / 250, (y - 30) / 42)
-        t = max(0.0, 1 - d) ** 0.9 * (len(SKY) - 1)
+        t = max(0.0, 1 - d) ** 0.9 * 3.0 + (1 - y / H) * 0.4          # a dim, even mist (never the bright end of the ramp)
         lo = int(t)
         frac = t - lo
         i = min(len(SKY) - 1, lo + (1 if frac * 16 > BAYER[y % 4][x % 4] else 0))
@@ -40,23 +40,17 @@ for cx in range(-6, W + 12, 11):
 for y in range(34, HORIZON + 2):                                   # mist lying at their feet
     for x in range(W):
         if (x + y * 2) % 4 < 2 and y > 38 or y > 43:
-            r, g, b = px[x, y]; px[x, y] = tuple((a * 3 + c) // 4 for a, c in zip((r, g, b), SKY[4]))
+            r, g, b = px[x, y]; px[x, y] = tuple((a * 3 + c) // 4 for a, c in zip((r, g, b), SKY[3]))
 # mid trees, thinned out in the lit middle
 for cx in range(-8, W + 14, 19):
-    if 255 < cx < 385 and random.random() < 0.7: continue
     pine(cx + random.randint(-4, 4), 50, random.randint(40, 54), random.randint(8, 11), MID)
-# ground and the lit path
+# ground: dark, with a few paler dithered patches
 draw.rectangle([0, HORIZON + 1, W, H], fill=GROUND)
 for y in range(HORIZON + 1, H):
-    k = (y - HORIZON) / (H - HORIZON)
-    half = 70 + 190 * k
-    for x in range(int(320 - half), int(320 + half)):
-        e = abs(x - 320) / half
-        near_edge = e > 0.82
-        c = PATH_LIT if (e < 0.45 and (x + y) % 3 == 0 or e < 0.25) else PATH
-        px[x, y] = GROUND if near_edge and (x + y) % 2 else c
-# near trees along both sides
-for cx in list(range(-10, 190, 27)) + list(range(450, W + 14, 27)):
+    for x in range(W):
+        if (x * 7 + y * 13) % 11 == 0 and (x + y) % 2 == 0: px[x, y] = PATH
+# near trees, all the way across
+for cx in range(-10, W + 14, 27):
     pine(cx + random.randint(-5, 5), 55, random.randint(58, 74), random.randint(11, 15), NEAR, 4)
 # foreground: black trunks with sparse branches and needle tufts, left and right, plus bushes
 def trunk(x, w, color):
@@ -70,7 +64,7 @@ def trunk(x, w, color):
                 for dy, dx in ((-1, 0), (1, 0), (0, side), (-1, side), (1, -side)): draw.point((bx + dx, by + dy), fill=color)
 for x, w in ((14, 9), (46, 6), (96, 8), (150, 5)): trunk(x, w, DEEP if w > 6 else FORE)
 for x, w in ((612, 9), (578, 7), (528, 8), (478, 5)): trunk(x, w, DEEP if w > 6 else FORE)
-for x in list(range(0, 215, 2)) + list(range(425, W, 2)):           # grass and ferns along the path
+for x in range(0, W, 2):                                            # grass and ferns
     if random.random() < 0.55:
         h = random.randint(2, 6)
         draw.line([(x, H - 4 - random.randint(0, 6)), (x, H - 4 - random.randint(0, 6) - h)], fill=DEEP if random.random() < 0.6 else FORE)
