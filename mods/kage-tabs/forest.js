@@ -56,9 +56,9 @@ export function arena(party, now, color) {
       .children(shown.map((p, i) => image(`${ART}${p.cls}-${frames[i]}.svg`).absolute()
         .left(dx - 24 - (shown.length - i) * STEP + (frames[i] === "awake-down" ? 14 : 0)).top(top(CHAR)).w(CHAR).h(CHAR)))
       .when(party.length > MAX, el => el.child(div().absolute().left(dx - 24 - (MAX + 1) * STEP + 20).top(top(CHAR) - 22).text_size(16).text_color(color).child(`+${party.length - MAX}`)))
-      // Its breath: flames out of the maw (about 17px right, 62px down in the art) toward the party.
+      // Its breath: flames out of the maw (about 22px right, 51px down) toward the party.
       .when(dragon === "dragon-attack", el => el.children([0, 1, 2, 3].map((k) => div().absolute()
-        .left(dx + 17 - 32 * (k + 1)).top(top(DRAGON) + 50 + k * 2).w(32).h(32 - k * 6)
+        .left(dx + 22 - 32 * (k + 1)).top(top(DRAGON) + 35 + k * 3).w(32).h(32 - k * 6)
         .bg(["#fff3a0", "#ffb02e", "#ff6a1a", "#b83a1a"][k]))))
       .child(image(`${ART}${dragon}.svg`).absolute().left(dx).top(top(DRAGON)).w(DRAGON).h(DRAGON)));
 }
