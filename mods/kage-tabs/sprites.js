@@ -45,12 +45,13 @@ export const SPR = {
     "moves": true
   },
   "witch": {
-    "w": 124,
-    "h": 120,
+    "w": 165,
+    "h": 156,
     "n": 9,
     "hit": [
-      2,
-      6
+      3,
+      4,
+      5
     ],
     "moves": true
   },

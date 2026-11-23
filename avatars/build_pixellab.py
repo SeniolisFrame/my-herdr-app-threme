@@ -68,7 +68,7 @@ SPR = {}
 os.makedirs(OUT, exist_ok=True)
 
 # The witch is the original 8-bit one (avatars/witch.json), not a Pixellab sprite: 32x32 art, 2x on the card, 4x in the scene.
-LEGACY = {"witch"}
+LEGACY = set()                                          # {"witch"} brings back the original 8-bit witch
 def legacy(c):
     data = json.load(open(os.path.join(HERE, c + ".json")))
     def grid(name):
