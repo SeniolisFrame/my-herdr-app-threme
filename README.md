@@ -42,7 +42,7 @@ for mods, hence the menu.
 
 Art: `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
 one json each) and `python avatars/dragon.py avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
-turns them into the SVGs (32x32 shown at 64px, the 56x56 dragon at 112px, both 2x).
+turns them into the SVGs (32x32 shown at 80px, the 56x56 dragon at 140px, both 2.5x).
 
 ## 8-bit spaces (mods/kage-spaces)
 
