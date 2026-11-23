@@ -13,6 +13,10 @@ $programs = Join-Path $app "programs.json"
 if ((Test-Path $programs) -and [IO.File]::ReadAllText($programs) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "programs.json"))) {
   Remove-Item $programs; Write-Host "programs.json removed: the Claude icon is orange again." }
 
+# my-herdr-text.json goes only if it is still exactly ours.
+$text = Join-Path $app "my-herdr-text.json"
+if ((Test-Path $text) -and [IO.File]::ReadAllText($text) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "my-herdr-text.json"))) { Remove-Item $text }
+
 # Every personal layout, not just the open one: install.ps1 may have run with another open.
 Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   $json = [IO.File]::ReadAllText($_.FullName)

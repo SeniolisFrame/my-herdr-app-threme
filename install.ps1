@@ -16,6 +16,11 @@ if (-not (Test-Path $programs)) { Copy-Item (Join-Path $PSScriptRoot "programs.j
 elseif ([IO.File]::ReadAllText($programs) -ne [IO.File]::ReadAllText((Join-Path $PSScriptRoot "programs.json"))) {
   Write-Host "programs.json exists: add the claude entry from $PSScriptRoot\programs.json by hand for the violet Claude icon." }
 Copy-Item (Join-Path $PSScriptRoot "mods\kage-agents\*") $mod -Force
+# Bigger text for Unifont in my-herdr-app's Files and Changes (it reads this file; restart herdr-app).
+# Someone's own file is left alone.
+$text = Join-Path $app "my-herdr-text.json"
+if (-not (Test-Path $text) -or [IO.File]::ReadAllText($text) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "my-herdr-text.json"))) { Copy-Item (Join-Path $PSScriptRoot "my-herdr-text.json") $text -Force }
+else { Write-Host "my-herdr-text.json exists: set the sizes from $PSScriptRoot\my-herdr-text.json by hand." }
 # Both avatars go in: the Agents list's menu (the sort button) picks one.
 Copy-Item (Join-Path $PSScriptRoot "avatars\*.svg") $mod -Force
 # Left for installers that rewrite a layout (my-herdr-app's): they run it after, kage stays.

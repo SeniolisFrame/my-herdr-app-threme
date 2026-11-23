@@ -76,6 +76,9 @@ win98) are read-only: clone one first (`herdr-app do layout.clone`), then run it
 It also leaves `kage-layout.ps1` in herdr-app's `after-layout` folder: an installer that
 rewrites a layout (my-herdr-app's does) runs it afterwards, so kage stays without a second install. `.\kage-layout.test.ps1`
 checks it on a copy of herdr's main layout.
+It also writes `my-herdr-text.json` (16px text, 22px rows) so my-herdr-app's Files and Changes
+match the Unifont; restart herdr-app to apply it. An existing file of yours is left alone, and
+`uninstall.ps1` removes it only if it is still ours.
 
 macOS / Linux:
 

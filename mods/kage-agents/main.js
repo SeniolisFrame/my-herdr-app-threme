@@ -90,7 +90,6 @@ function icon(p, size, color) {
 const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a8325e"];
 // Unifont at its native 16px for headings and card text (ships in mods/kage-spaces/fonts).
 const PIXEL = "Unifont";
-const SMALL = "Unifont";
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
 
 export default class Agents extends View {
@@ -410,7 +409,7 @@ export default class Agents extends View {
             this.folded.has(a.address) ? this.folded.delete(a.address) : this.folded.add(a.address);
             cx.notify();
           })).child(face))
-        .child(v_flex().flex_1().min_w(0).gap(3).font_family(SMALL).text_size(16).line_height("18px")
+        .child(v_flex().flex_1().min_w(0).gap(3).font_family(PIXEL).text_size(16).line_height("18px")
           .child(h_flex().gap(6).items_center().child(badge)
             .when(Boolean(when), (r) => r.child(div().text_size(16).text_color(t.dim).child(duration(now - when)))))
           .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name)))
