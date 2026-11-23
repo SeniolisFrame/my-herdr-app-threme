@@ -68,9 +68,9 @@ export const SPR = {
     "moves": true
   },
   "dragon": {
-    "w": 285,
-    "h": 192,
-    "mouthX": 12,
-    "mouthY": 97
+    "w": 288,
+    "h": 204,
+    "mouthX": 72,
+    "mouthY": 114
   }
 };

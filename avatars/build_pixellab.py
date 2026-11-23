@@ -85,32 +85,50 @@ for c in CLASSES:
     crop_at(f0, cx, b0[1] - 1, 24, 24).save(os.path.join(OUT, f"{c}-icon.png"))
     print(c, "frames" if have else "standing only", (sw, sh))
 
-# the dragon: a pale rim so a dark body reads on the dark forest, then SCALE x; hit = pink, asleep = dark with z marks
-d = load("dragon.png")
-b = box(d); d = d.crop(b)
-rim = Image.new("RGBA", (d.width + 4, d.height + 4), (0, 0, 0, 0)); rim.paste(d, (2, 2))
-a = rim.getchannel("A"); edge = Image.new("RGBA", rim.size, (0, 0, 0, 0)); ep = edge.load(); ap = a.load()
-for y in range(rim.height):
-    for x in range(rim.width):
-        if ap[x, y] < 20 and any(0 <= x + dx < rim.width and 0 <= y + dy < rim.height and ap[x + dx, y + dy] > 20 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))): ep[x, y] = RIM + (255,)
-edge.alpha_composite(rim); rim = edge
-pad = 3
-def padded(im, dy=0):
-    out = Image.new("RGBA", (im.width, im.height + pad), (0, 0, 0, 0)); out.paste(im, (0, pad + dy)); return out
-big = scaled(rim, SCALE)
-pink = big.copy(); pp = pink.load()
-for y in range(pink.height):
-    for x in range(pink.width):
-        r, g, bl, al = pp[x, y]
-        if al and (r + g + bl) > 150: pp[x, y] = (255, 154, 168, al)
-sleepy = darken(big, 0.45)
-padded(big, 0).save(os.path.join(OUT, "dragon-idle.png")); padded(big, 3).save(os.path.join(OUT, "dragon-idle-1.png"))
-padded(big, 0).save(os.path.join(OUT, "dragon-attack.png")); padded(pink, 0).save(os.path.join(OUT, "dragon-hit.png"))
-zmarks(padded(sleepy, 3), 0).save(os.path.join(OUT, "dragon-sleep-1.png"))
-hx, hy = 38, 40                                           # the head in the source drawing, for the menu icon
-Image.open(os.path.join(SRC, "dragon.png")).convert("RGBA").crop((b[0], b[1], b[0] + 48, b[1] + 48)).resize((24, 24), Image.NEAREST).save(os.path.join(OUT, "dragon-icon.png"))
-# mouth: about (9, 64) in the 192x128 source; minus the crop, plus the rim, times SCALE
-SPR["dragon"] = {"w": big.width, "h": big.height + pad, "mouthX": round((9 - b[0] + 2) * SCALE), "mouthY": round((64 - b[1] + 2) * SCALE) + pad}
-print("dragon", big.size, SPR["dragon"])
+REF = os.path.join(HERE, "dragon_ref_frames.json")      # the black dragon made from the reference drawing (the one the user likes best)
+if os.path.exists(REF):
+    data = json.load(open(REF)); K = 3
+    def frame(name):
+        rows = data["avatars"][name]; im = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0)); px = im.load()
+        for y, row in enumerate(rows):
+            for x, ch in enumerate(row):
+                if ch != ".":
+                    c = data["palette"][ch]; px[x, y] = (int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16), 255)
+        return im.resize((im.width * K, im.height * K), Image.NEAREST)
+    for name, out in (("dragon-idle", "dragon-idle"), ("dragon-idle-1", "dragon-idle-1"), ("dragon-attack", "dragon-attack"), ("dragon-hit", "dragon-hit"), ("dragon-sleep-1", "dragon-sleep-1")):
+        frame(name).save(os.path.join(OUT, out + ".png"))
+    big = frame("dragon-idle")
+    Image.open(os.path.join(OUT, "dragon-idle.png")).crop((0, 24 * K, 40 * K, 64 * K)).resize((24, 24), Image.NEAREST).save(os.path.join(OUT, "dragon-icon.png"))
+    SPR["dragon"] = {"w": big.width, "h": big.height, "mouthX": 24 * K, "mouthY": 38 * K}
+    print("dragon (reference version)", big.size)
+else:
+    # the dragon: a pale rim so a dark body reads on the dark forest, then SCALE x; hit = pink, asleep = dark with z marks
+    d = load("dragon.png")
+    b = box(d); d = d.crop(b)
+    rim = Image.new("RGBA", (d.width + 4, d.height + 4), (0, 0, 0, 0)); rim.paste(d, (2, 2))
+    a = rim.getchannel("A"); edge = Image.new("RGBA", rim.size, (0, 0, 0, 0)); ep = edge.load(); ap = a.load()
+    for y in range(rim.height):
+        for x in range(rim.width):
+            if ap[x, y] < 20 and any(0 <= x + dx < rim.width and 0 <= y + dy < rim.height and ap[x + dx, y + dy] > 20 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))): ep[x, y] = RIM + (255,)
+    edge.alpha_composite(rim); rim = edge
+    pad = 3
+    def padded(im, dy=0):
+        out = Image.new("RGBA", (im.width, im.height + pad), (0, 0, 0, 0)); out.paste(im, (0, pad + dy)); return out
+    big = scaled(rim, SCALE)
+    pink = big.copy(); pp = pink.load()
+    for y in range(pink.height):
+        for x in range(pink.width):
+            r, g, bl, al = pp[x, y]
+            if al and (r + g + bl) > 150: pp[x, y] = (255, 154, 168, al)
+    sleepy = darken(big, 0.45)
+    padded(big, 0).save(os.path.join(OUT, "dragon-idle.png")); padded(big, 3).save(os.path.join(OUT, "dragon-idle-1.png"))
+    padded(big, 0).save(os.path.join(OUT, "dragon-attack.png")); padded(pink, 0).save(os.path.join(OUT, "dragon-hit.png"))
+    zmarks(padded(sleepy, 3), 0).save(os.path.join(OUT, "dragon-sleep-1.png"))
+    hx, hy = 38, 40                                           # the head in the source drawing, for the menu icon
+    Image.open(os.path.join(SRC, "dragon.png")).convert("RGBA").crop((b[0], b[1], b[0] + 48, b[1] + 48)).resize((24, 24), Image.NEAREST).save(os.path.join(OUT, "dragon-icon.png"))
+    # mouth: about (9, 64) in the 192x128 source; minus the crop, plus the rim, times SCALE
+    SPR["dragon"] = {"w": big.width, "h": big.height + pad, "mouthX": round((9 - b[0] + 2) * SCALE), "mouthY": round((64 - b[1] + 2) * SCALE) + pad}
+    print("dragon", big.size, SPR["dragon"])
+
 with open(os.path.join(TABS, "sprites.js"), "w") as f:
     f.write("// Written by avatars/build_pixellab.py: the size of each sprite the tab bar scene draws.\nexport const SPR = " + json.dumps(SPR, indent=2) + ";\n")
