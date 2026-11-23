@@ -119,6 +119,8 @@ export default class Tabs extends View {
     const stop = (_e, cx) => cx.stop_propagation();
     const button = (id, label, action) => div().id(id).size(26).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", stop).on_click(action).child(label);
+    // In the tall dungeon bar the tabs stand on the floor and the window buttons stay at the top.
+    const winButton = (...a) => button(...a).when(!shared("dungeon.off"), el => el.self_start().mt(8));
     const ink = NAME[(shared("space.colors") ?? {})[space?.id]] ?? t.accent;
     const item = (c, i) => {
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
@@ -165,19 +167,19 @@ export default class Tabs extends View {
           else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
         }).child(svg(icon).size(14)).child(label);
     };
-    return h_flex().relative().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border).font_family(PIXEL)
+    return h_flex().relative().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().when(dungeon, el => el.items_end().pb(10)).bg(t.chrome).border_b(1).border_color(t.border).font_family(PIXEL)
       .when(dungeon, el => el.child(backdrop(Date.now())))
       .on_mouse_up("left", () => { this.pressed = null; })
       .on_scroll_wheel(e => this.wheel(e))
-      .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
+      .child(h_flex().id("tab-scroll").flex_1().min_w(0).when(dungeon, el => el.h(36)).when(!dungeon, el => el.h_full()).items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
         .children(shown.map(item)))
       .when(dungeon, el => el.child(fighters(party, Date.now(), t.accent)))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
-      .when(w?.buttons, el => el.child(button("minimize", w.platform === "windows" ? svg("mods/kage-tabs/win-min.svg").size(16) : "−", () => run("window.minimize")))
-        .child(button("maximize", w.platform === "windows" ? svg(`mods/kage-tabs/${w.maximized ? "win-restore" : "win-max"}.svg`).size(16) : "□", () => run("window.maximize")))
-        .child(button("close-window", w.platform === "windows" ? svg("mods/kage-tabs/win-close.svg").size(16) : svg("mods/pane/close.svg").size(13), () => run("window.close"))));
+      .when(w?.buttons, el => el.child(winButton("minimize", w.platform === "windows" ? svg("mods/kage-tabs/win-min.svg").size(16) : "−", () => run("window.minimize")))
+        .child(winButton("maximize", w.platform === "windows" ? svg(`mods/kage-tabs/${w.maximized ? "win-restore" : "win-max"}.svg`).size(16) : "□", () => run("window.maximize")))
+        .child(winButton("close-window", w.platform === "windows" ? svg("mods/kage-tabs/win-close.svg").size(16) : svg("mods/pane/close.svg").size(13), () => run("window.close"))));
   }
 }

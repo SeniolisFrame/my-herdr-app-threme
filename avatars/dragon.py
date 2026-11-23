@@ -1,7 +1,8 @@
-# Dragon boss, 40x40, facing left toward the party. Frames: idle (wing up/down), attack (jaw open, fire), hit (flashes pink),
-# sleep (eyes shut, wing folded, a "z" drifting up). python avatars/dragon.py avatars/dragon.json, then node avatars/build.mjs
+# Dragon boss, 56x56, facing left toward the party: dark crimson, angry yellow slit eyes, curled horns, fangs, spiked back,
+# bat wings. Frames: idle (wing up/down), attack (jaw open, glowing maw), hit (flashes pink), sleep (eyes shut, wings folded, "z").
+# python avatars/dragon.py avatars/dragon.json, then node avatars/build.mjs
 import json, sys
-N = 40
+N = 56
 ell = lambda x, y, cx, cy, rx, ry: ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1
 
 def inside(x, y, poly):                                   # even-odd point in polygon
@@ -11,75 +12,98 @@ def inside(x, y, poly):                                   # even-odd point in po
         if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: c = not c
     return c
 
-def line(g, a, b, w, c):                                  # thick line
+def line(g, a, b, w, c, keep=None):                       # thick line; keep: only paint over these letters
     (x1, y1), (x2, y2) = a, b
     steps = int(max(abs(x2 - x1), abs(y2 - y1)) * 2) + 1
     for s in range(steps + 1):
         px, py = x1 + (x2 - x1) * s / steps, y1 + (y2 - y1) * s / steps
-        for y in range(N):
-            for x in range(N):
-                if (x - px) ** 2 + (y - py) ** 2 <= (w / 2) ** 2: g[y][x] = c
+        for y in range(max(0, int(py - w)), min(N, int(py + w) + 2)):
+            for x in range(max(0, int(px - w)), min(N, int(px + w) + 2)):
+                if (x - px) ** 2 + (y - py) ** 2 <= (w / 2) ** 2 and (keep is None or g[y][x] in keep): g[y][x] = c
+
+def fill(g, fn, c, keep=None):
+    for y in range(N):
+        for x in range(N):
+            if fn(x, y) and (keep is None or g[y][x] in keep): g[y][x] = c
 
 def figure(mode, f=0):                                    # mode: idle | attack | sleep
     g = [["."] * N for _ in range(N)]
     up = f == 0 and mode != "sleep"
-    # wing behind the body: bones S, membrane R
-    tip = (31, 2) if up else (33, 9)
-    wing = [(23, 21), tip, (38, 14 if up else 17), (34, 21), (28, 22)] if mode != "sleep" else [(23, 21), (30, 14), (35, 19), (30, 23)]
-    for y in range(N):
-        for x in range(N):
-            if inside(x, y, wing): g[y][x] = "R"
-    line(g, (24, 22), wing[1], 1.6, "S"); line(g, (24, 22), wing[2], 1.6, "S")
-    line(g, (36, 29), (39, 21), 3, "B"); line(g, (34, 30), (37, 27), 4, "B")           # tail
-    for lx in (19, 29):                                                                  # legs and claws
-        for y in range(31, 38):
-            for x in range(lx, lx + 4): g[y][x] = "B"
-        for x in range(lx - 1, lx + 4): g[37][x] = g[38][x] = "H" if x in (lx - 1, lx + 1, lx + 3) else "S"
-    for y in range(N):
-        for x in range(N):
-            if ell(x, y, 26, 27, 10, 7): g[y][x] = "B"                                  # body
-            if ell(x, y, 24, 31, 8, 3.5) and g[y][x] == "B": g[y][x] = "Y"              # belly
-    line(g, (20, 24), (14, 15), 5, "B")                                                  # neck
-    for i, (x, y) in enumerate(((21, 18), (24, 19), (27, 20), (30, 22))):                # back spikes
-        if mode != "sleep" or i > 1: g[y][x] = g[y - 1][x] = g[y - 2][x] = "H"
-    for y in range(N):
-        for x in range(N):
-            if ell(x, y, 12, 13, 5.5, 4.5): g[y][x] = "B"                                # head
-            if ell(x, y, 7, 15.5, 4, 2.3): g[y][x] = "B"                                 # snout
-    line(g, (11, 9), (15, 3), 2, "H")                                                   # horn
-    if mode == "attack":                                                                 # jaw open, fire out the front
-        for y in range(N):
-            for x in range(N):
-                if ell(x, y, 8, 18.5, 4, 2): g[y][x] = "B"
-                if ell(x, y, 8, 16.5, 3, 1.4): g[y][x] = "K"
-        for y in range(N):
-            for x in range(N):
-                if ell(x, y, 2, 17, 3, 3): g[y][x] = "F"
-                if ell(x, y, 2, 17, 1.6, 1.6): g[y][x] = "C"
-    for x in (4, 6): g[17 if mode != "attack" else 20][x] = "H"                         # fangs
+    # bat wing behind the body: membrane M, finger bones V
     if mode == "sleep":
-        for x in (9, 10, 11): g[12][x] = "K"                                             # shut eye
+        tips = [(44, 20), (52, 26), (50, 33)]
+    elif up:
+        tips = [(40, 1), (51, 7), (55, 20)]
     else:
-        g[11][10] = g[11][11] = g[12][10] = g[12][11] = "E"; g[12][10] = "K"            # eye
-    # outline: any body-ish cell touching empty space
+        tips = [(48, 12), (55, 22), (54, 33)]
+    sh = (36, 29)
+    poly = [sh, tips[0], (tips[0][0] + 5, (tips[0][1] + tips[1][1]) // 2 + 1), tips[1], (tips[1][0] - 2, (tips[1][1] + tips[2][1]) // 2 + 1), tips[2], (44, 33)]
+    fill(g, lambda x, y: inside(x, y, poly), "M")
+    for t in tips: line(g, sh, t, 1.8, "V")
+    line(g, sh, tips[0], 2.6, "V")
+    # tail: curls up behind, ending in a spade
+    line(g, (46, 40), (51, 45), 6, "B"); line(g, (51, 45), (55, 41), 4, "B"); line(g, (55, 41), (54, 34), 2.6, "B")
+    fill(g, lambda x, y: inside(x, y, [(52, 36), (55, 30), (56, 37)]), "H")
+    # legs and claws (back leg, front leg)
+    for lx, ly, w in ((43, 41, 7), (23, 42, 6)):
+        fill(g, lambda x, y: lx <= x < lx + w and ly <= y <= 51, "B")
+        fill(g, lambda x, y: lx - 1 <= x < lx + w + 2 and 49 <= y <= 51, "B")
+        for k in range(3):
+            fill(g, lambda x, y, k=k: x == lx - 1 + k * 3 and 52 <= y <= 54 or x == lx + k * 3 and y == 54, "H")
+    # body, haunch, belly plates
+    fill(g, lambda x, y: ell(x, y, 35, 36, 14, 10), "B")
+    fill(g, lambda x, y: ell(x, y, 44, 40, 7, 8), "B")
+    fill(g, lambda x, y: ell(x, y, 32, 41, 11, 5) and y > 37, "Y", "B")
+    for yy in (39, 42, 45): fill(g, lambda x, y, yy=yy: y == yy and 22 <= x <= 42, "S", "Y")      # belly plate lines
+    fill(g, lambda x, y: ell(x, y, 40, 30, 9, 3) and y < 31, "L", "B")                          # lit back
+    # neck and head
+    line(g, (28, 31), (19, 20), 9, "B")
+    fill(g, lambda x, y: ell(x, y, 15, 17, 9, 6.5), "B")                                         # head
+    fill(g, lambda x, y: ell(x, y, 7, 20, 7, 3.6), "B")                                          # snout
+    fill(g, lambda x, y: ell(x, y, 9, 24, 7, 2.2) and y >= 23, "S") if mode != "attack" else None
+    for xx, h in ((2, 3), (5, 4), (8, 3), (11, 3)):                                              # upper fangs
+        fill(g, lambda x, y, xx=xx, h=h: x == xx and 22 <= y < 22 + h, "H")
+    if mode == "attack":                                                                         # jaw open, maw glowing
+        fill(g, lambda x, y: ell(x, y, 9, 28, 7, 2.6), "B")
+        fill(g, lambda x, y: ell(x, y, 8, 25, 6, 2.2), "F")
+        fill(g, lambda x, y: ell(x, y, 7, 25, 3, 1.2), "C")
+        for xx in (3, 6, 9): fill(g, lambda x, y, xx=xx: x == xx and 26 <= y <= 27, "H")         # lower fangs
+    else:
+        for xx in (4, 8): fill(g, lambda x, y, xx=xx: x == xx and 20 <= y <= 21, "K")             # nostril and mouth line
+        fill(g, lambda x, y: y == 22 and 1 <= x <= 12, "K")
+    fill(g, lambda x, y: ell(x, y, 1.5, 19, 1.2, 1.2), "K")                                      # nostril
+    # curled horns, back spikes
+    line(g, (13, 12), (17, 5), 3.4, "H"); line(g, (17, 5), (23, 2), 2.6, "H"); line(g, (23, 2), (27, 3), 1.6, "H")
+    line(g, (19, 12), (25, 7), 3, "H"); line(g, (25, 7), (30, 6), 2, "H")
+    for sx, sy in ((24, 25), (28, 27), (32, 27), (37, 27), (42, 29), (46, 33)):
+        if mode == "sleep" and sx > 38: continue
+        fill(g, lambda x, y, sx=sx, sy=sy: abs(x - sx) <= (sy - y) * 0.45 and sy - 5 <= y <= sy, "H", "B.")
+    # angry eye (slit pupil under a heavy brow) or a shut one
+    if mode == "sleep":
+        fill(g, lambda x, y: y == 15 and 9 <= x <= 14, "K")
+    else:
+        fill(g, lambda x, y: 9 <= x <= 14 and 14 <= y <= 16, "E")
+        fill(g, lambda x, y: x in (11, 12) and 14 <= y <= 16, "K")
+        line(g, (7, 11), (16, 15), 2.2, "S")                                                      # brow slants down toward the nose
+    # outline
     out = [r[:] for r in g]
     for y in range(N):
         for x in range(N):
-            if g[y][x] == "." and any(0 <= y + dy < N and 0 <= x + dx < N and g[y + dy][x + dx] in "BSRYH"
+            if g[y][x] == "." and any(0 <= y + dy < N and 0 <= x + dx < N and g[y + dy][x + dx] in "BSLMVYH"
                                       for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1))): out[y][x] = "K"
     g = out
     if mode == "sleep":
         z = ["XXXX", "..X.", ".X..", "XXXX"]
         for dy, row in enumerate(z):
             for dx, c in enumerate(row):
-                if c != "." and 0 <= 3 + f + dy < N: g[3 + f * 3 + dy][1 + dx] = "Z"
+                if c != "." and 0 <= 3 + f * 3 + dy < N: g[3 + f * 3 + dy][3 + dx] = "Z"
     return g
 
 def flash(g):                                             # got hit: the body goes pink
-    return [["P" if c in "BSRYH" else c for c in r] for r in g]
+    return [["P" if c in "BSLMVYH" else c for c in r] for r in g]
 
-pal = {"B": "#2f7d4f", "S": "#1d4d33", "R": "#b3263f", "Y": "#e8c36a", "H": "#f2e6c8", "E": "#ffd23f", "K": "#0d0a14",
-       "F": "#ff8a1f", "C": "#fff3a0", "Z": "#cfd8ff", "P": "#ff9aa8"}
+pal = {"B": "#7a1f2b", "S": "#4a1220", "L": "#b83a45", "Y": "#d9a35a", "M": "#3b1530", "V": "#8a2a4a", "H": "#efe2c4",
+       "E": "#ffe14a", "K": "#0d0a14", "F": "#ff6a1a", "C": "#fff3a0", "Z": "#cfd8ff", "P": "#ff9aa8"}
 grids = {"dragon-idle": figure("idle", 0), "dragon-idle-1": figure("idle", 1), "dragon-attack": figure("attack", 0),
          "dragon-hit": flash(figure("idle", 1)), "dragon-sleep": figure("sleep", 0), "dragon-sleep-1": figure("sleep", 1),
          "dragon-sleep-2": figure("sleep", 2)}

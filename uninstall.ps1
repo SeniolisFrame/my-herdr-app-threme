@@ -20,7 +20,7 @@ if ((Test-Path $text) -and [IO.File]::ReadAllText($text) -eq [IO.File]::ReadAllT
 # Every personal layout, not just the open one: install.ps1 may have run with another open.
 Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   $json = [IO.File]::ReadAllText($_.FullName)
-  # The dungeon makes the tab bar 88px: back to herdr's 42.
+  # The dungeon makes the tab bar 128px: back to herdr's 42.
   $new = $json -replace '("id":\s*"tabs"[^}]*?"px":\s*)88', '${1}42'
   $new = $new -replace '("mod":\s*)"kage-agents"', '$1"agents"' -replace '("mod":\s*)"kage-spaces"', '$1"spaces"' -replace '("mod":\s*)"kage-tabs"', '$1"tabs"'
   # Pane frames back to herdr's own (as in its main layout): rounded 10, 1px border.

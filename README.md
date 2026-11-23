@@ -35,14 +35,14 @@ plum, dusk, wine) in place of the stock teal/orange/blue.
 
 ![witch](avatars/witch-preview.png)
 
-The tab bar is a dungeon (88px tall, brick wall and torches behind the tabs): every working agent stands at the
+The tab bar is a dungeon (128px tall, brick wall and torches behind the tabs): every working agent stands at the
 right as its class and attacks a dragon boss; with nobody working the dragon sleeps. The Agents list's top-right
 button (the sort one) has a Dungeon switch that puts the plain 42px tab bar back. Herdr's Settings has no place
 for mods, hence the menu.
 
 Art: `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
 one json each) and `python avatars/dragon.py avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
-turns them into the SVGs (32x32 shown at 64px, the 40x40 dragon at 80px, both 2x).
+turns them into the SVGs (32x32 shown at 64px, the 56x56 dragon at 112px, both 2x).
 
 ## 8-bit spaces (mods/kage-spaces)
 
