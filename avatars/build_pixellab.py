@@ -66,7 +66,32 @@ def head_x(im, y0, rows=14):
 
 SPR = {}
 os.makedirs(OUT, exist_ok=True)
+
+# The witch is the original 8-bit one (avatars/witch.json), not a Pixellab sprite: 32x32 art, 2x on the card, 4x in the scene.
+LEGACY = {"witch"}
+def legacy(c):
+    data = json.load(open(os.path.join(HERE, c + ".json")))
+    def grid(name):
+        rows = data["avatars"][name]; im = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0)); px = im.load()
+        for y, row in enumerate(rows):
+            for x, ch in enumerate(row):
+                if ch != ".":
+                    col = data["palette"][ch]; px[x, y] = (int(col[1:3], 16), int(col[3:5], 16), int(col[5:7], 16), 255)
+        return im
+    for n in ("awake", "awake-mid", "awake-down", "sleep", "sleep-1", "sleep-2"): scaled(grid(f"{c}-{n}"), 2).save(os.path.join(OUT, f"{c}-{n}.png"))
+    pose = [grid(f"{c}-awake"), grid(f"{c}-awake-mid"), grid(f"{c}-awake-down"), grid(f"{c}-awake-mid")]
+    seq = [pose[i % 4] for i in range(9)]                  # the three poses cycled into nine frames
+    bs = [box(f) for f in seq]
+    u = (min(b[0] for b in bs), min(b[1] for b in bs), max(b[2] for b in bs), max(b[3] for b in bs))
+    for i, f in enumerate(seq): scaled(f.crop(u), 4).save(os.path.join(OUT, f"{c}-atk-{i}.png"))
+    w, h = scaled(seq[0].crop(u), 4).size
+    SPR[c] = {"w": w, "h": h, "n": 9, "hit": [2, 6], "moves": True}
+    scaled(grid(f"{c}-awake").crop((6, 2, 26, 22)), 1.2).resize((24, 24), Image.NEAREST).save(os.path.join(OUT, f"{c}-icon.png"))
+    print(c, "original 8-bit art", (w, h))
+
 for c in CLASSES:
+    if c in LEGACY:
+        legacy(c); continue
     names = [f"{c}_attack_{i}.png" for i in range(9)]
     have = all(os.path.exists(os.path.join(SRC, n)) for n in names)
     frames = [load(n) for n in names] if have else [load(f"{c}_east.png")] * 9

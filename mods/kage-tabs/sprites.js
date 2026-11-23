@@ -23,37 +23,36 @@ export const SPR = {
     "moves": true
   },
   "priest": {
-    "w": 81,
+    "w": 138,
     "h": 136,
-    "n": 1,
+    "n": 9,
     "hit": [
       3,
       4,
       5
     ],
-    "moves": false
+    "moves": true
   },
   "reaper": {
-    "w": 64,
-    "h": 135,
-    "n": 1,
+    "w": 159,
+    "h": 147,
+    "n": 9,
     "hit": [
       3,
       4,
       5
     ],
-    "moves": false
+    "moves": true
   },
   "witch": {
-    "w": 80,
-    "h": 136,
-    "n": 1,
+    "w": 124,
+    "h": 120,
+    "n": 9,
     "hit": [
-      3,
-      4,
-      5
+      2,
+      6
     ],
-    "moves": false
+    "moves": true
   },
   "spear": {
     "w": 182,
