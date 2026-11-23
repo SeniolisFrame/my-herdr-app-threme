@@ -1,6 +1,7 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
-import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
+import { spaces, panes, agents, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
+import { scene } from "./dungeon.js";
 
 // kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at
 // its native 16px, no program icons, the open tab in the open space's name color.
@@ -39,12 +40,17 @@ function label(tab, lead) {
 const folder = (cwd) => cwd?.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || null;
 
 export default class Tabs extends View {
-  init() {
+  init(_props, cx) {
     this.pressed = null;
     this.scroll = ScrollHandle.new();
     try { this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}"); } catch { this.panels = {}; }
     if (!this.panels || typeof this.panels !== "object" || Array.isArray(this.panels)) this.panels = {};
     this.swipe = { acc: 0, steps: 0, at: 0, last: 0 };
+    // The dungeon redraws only when a working agent's frame changes (every 250ms); nobody working, no redraws.
+    cx.timer.every(125, (cx) => {
+      const step = Math.floor(Date.now() / 250);
+      if (this.working && step !== this.step) { this.step = step; cx.notify(); }
+    });
   }
 
   // One tab per wheel notch. A touchpad or smooth-scrolling mouse sends many
@@ -134,6 +140,8 @@ export default class Tabs extends View {
         .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(6).rounded(3).bg(t[c.status])))
         .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))));
     };
+    const party = agents().filter(a => a.status === "working").map(a => ({ id: a.address, cls: "witch" }));
+    this.working = party.length > 0 && !shared("dungeon.off");
     const root = layout(), sidebar = find(root, "sidebar"), w = window();
     // Old saved rails and a dragged-narrow sidebar can be smaller than the window buttons.
     const lightsPadding = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
@@ -158,6 +166,7 @@ export default class Tabs extends View {
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
         .children(shown.map(item)))
+      .when(!shared("dungeon.off"), el => el.child(scene(party, Date.now(), t.accent)))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
