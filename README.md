@@ -24,28 +24,16 @@ Same layout, other colors: `.\install.ps1 -Theme <name>`, back with `.\install.p
 
 Text colors keep at least 4.5:1 contrast on the backgrounds.
 
-Pick the avatar in the Agents list, not in the theme: its top-right button (the sort one) opens a menu with
-Sort agents and Avatar, Bat or Witch, and either works with either theme. The witch is a cute girl with long pink hair
-(staff orb pulsing and sparks while the agent works, dozing under her hat with z's while it idles), drawn by `avatars/witch.py`.
-Herdr's Settings has no place for mods, hence the menu.
+## Witch cards (mods/kage-agents)
 
-![witch](avatars/witch-preview.png)
-
-## Bat cards (mods/kage-agents)
-
-A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
-eyes, one glowing with a flare, and a violet aura, flapping, while the agent works or needs you;
-hanging upside down from a branch, wings wrapped round, with z's rising while it idles. Each card is named
-after its terminal's folder, like the tabs, with its space's name underneath in that
-space's color. `programs.json` draws the Claude icon in violet instead of orange (install writes
+A copy of herdr's Agents list where each agent is a card with a pixel-art witch (Pixellab): casting a spell, facing you,
+while the agent works or needs you; dozing on the ground while it idles. Each card is named
+after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
 teal/orange/blue.
 
-![bats](avatars/preview.png)
-
-`python avatars/draw.py avatars/avatars.json` draws the two 32x32 pixel grids, `node avatars/build.mjs`
-turns them into the SVGs (shown at 64px, 2x).
+`python avatars/witch_attack.py` fits the Pixellab frames in `avatars/pixellab/` into the 96px card art.
 
 ## 8-bit spaces (mods/kage-spaces)
 
@@ -85,7 +73,7 @@ macOS / Linux:
 ```sh
 APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
 mkdir -p "$APP/themes" "$APP/mods/kage-agents"
-cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/*.svg "$APP/mods/kage-agents/"
+cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/witch-*.png "$APP/mods/kage-agents/"
 cp -r mods/kage-spaces mods/kage-tabs mods/kage-pane "$APP/mods/"
 herdr-app do app.theme --name kage
 ```

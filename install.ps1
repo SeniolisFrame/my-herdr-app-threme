@@ -1,4 +1,4 @@
-# Copies the kage theme, the bat agent cards (mods/kage-agents), the 8-bit spaces list
+# Copies the kage theme, the witch agent cards (mods/kage-agents), the 8-bit spaces list
 # (mods/kage-spaces), tab bar (mods/kage-tabs) and pane header (mods/kage-pane) into herdr-app,
 # switches to kage, and points the current layout at all four with square 2px pane frames.
 # Run it again after every change or pull. -Theme midnight|sakura|forest|ember|ocean: another color set, same mods.
@@ -21,8 +21,9 @@ Copy-Item (Join-Path $PSScriptRoot "mods\kage-agents\*") $mod -Force
 $text = Join-Path $app "my-herdr-text.json"
 if (-not (Test-Path $text) -or [IO.File]::ReadAllText($text) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "my-herdr-text.json"))) { Copy-Item (Join-Path $PSScriptRoot "my-herdr-text.json") $text -Force }
 else { Write-Host "my-herdr-text.json exists: set the sizes from $PSScriptRoot\my-herdr-text.json by hand." }
-# Both avatars go in: the Agents list's menu (the sort button) picks one.
-Copy-Item (Join-Path $PSScriptRoot "avatars\*.svg") $mod -Force
+# The witch's sleeping frames (the casting ones are in mods/kage-agents). The bat is gone: drop an older install's.
+Copy-Item (Join-Path $PSScriptRoot "avatars\witch-*.png") $mod -Force
+Remove-Item (Join-Path $mod "bat-*.svg"), (Join-Path $mod "witch-awake*.png"), (Join-Path $mod "witch-icon.png"), (Join-Path $mod "witch-*.svg") -ErrorAction SilentlyContinue
 # Left for installers that rewrite a layout (my-herdr-app's): they run it after, kage stays.
 $hooks = Join-Path $app "after-layout"
 New-Item -ItemType Directory -Force $hooks | Out-Null
