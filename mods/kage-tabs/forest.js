@@ -1,12 +1,12 @@
 import { div, image } from "gpui-kit";
 
 // kage: a forest behind the whole tab bar. Every working agent is a class-character swinging at the dragon,
-// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 60x60 dragon),
+// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 96x68 dragon made from a reference drawing),
 // all drawn at 2.5x so the party and the boss share one pixel size.
 const ART = "mods/kage-agents/";
 const MAX = 4;                                   // characters shown; more show as "+N"
-const CHAR = 80, DRAGON = 150, STEP = 70, FLOOR = 8;
-export const HEIGHT = 171;                       // the tab bar's height while the forest is on (the layout's tabs block)
+const CHAR = 80, DRAGON_W = 240, DRAGON_H = 170, STEP = 70, FLOOR = 8;
+export const HEIGHT = 180;                       // the tab bar's height while the forest is on (the layout's tabs block)
 export const PLAIN = 42;                         // and with it off
 
 const SWING = ["awake", "awake-mid", "awake-down", "awake-mid"];
@@ -52,13 +52,13 @@ export function arena(party, now, color) {
   const half = MAX * STEP + 24;                  // room for the party on each side, so the dragon is centred
   const dx = half;                               // the dragon's left edge in this box
   return div().absolute().left(0).right(0).top(0).bottom(0).flex().justify_center()
-    .child(div().relative().flex_none().w(half * 2 + DRAGON).h(HEIGHT - 1)
+    .child(div().relative().flex_none().w(half * 2 + DRAGON_W).h(HEIGHT - 1)
       .children(shown.map((p, i) => image(`${ART}${p.cls}-${frames[i]}.svg`).absolute()
         .left(dx - 24 - (shown.length - i) * STEP + (frames[i] === "awake-down" ? 14 : 0)).top(top(CHAR)).w(CHAR).h(CHAR)))
       .when(party.length > MAX, el => el.child(div().absolute().left(dx - 24 - (MAX + 1) * STEP + 20).top(top(CHAR) - 22).text_size(16).text_color(color).child(`+${party.length - MAX}`)))
-      // Its breath: a wavy stream of flames out of the maw (about 18px right, 64px down in the art) toward the party.
+      // Its breath: a wavy stream of flames out of the maw (62px right, 95px down in the art) toward the party.
       .when(dragon === "dragon-attack", el => el.children([0, 1, 2, 3, 4].map((k) => div().absolute()
-        .left(dx + 18 - 30 * (k + 1)).top(top(DRAGON) + 64 - (30 - k * 4) / 2 + [0, -6, 2, -5, 3][(k + beat) % 5]).w(30).h(30 - k * 4)
+        .left(dx + 62 - 30 * (k + 1)).top(top(DRAGON_H) + 95 - (24 - k * 3) / 2 + [0, -5, 2, -4, 3][(k + beat) % 5]).w(30).h(24 - k * 3)
         .bg(["#fff3a0", "#ffd23f", "#ffb02e", "#ff6a1a", "#b83a1a"][k]))))
-      .child(image(`${ART}${dragon}.svg`).absolute().left(dx).top(top(DRAGON)).w(DRAGON).h(DRAGON)));
+      .child(image(`${ART}${dragon}.svg`).absolute().left(dx).top(top(DRAGON_H)).w(DRAGON_W).h(DRAGON_H)));
 }

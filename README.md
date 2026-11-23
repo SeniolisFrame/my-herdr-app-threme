@@ -35,14 +35,14 @@ plum, dusk, wine) in place of the stock teal/orange/blue.
 
 ![witch](avatars/witch-preview.png)
 
-The tab bar is a forest (171px tall: pines, a moon and fireflies behind the tabs, which stand on the grass): the
+The tab bar is a forest (180px tall: pines, a moon and fireflies behind the tabs, which stand on the grass): the
 dragon boss stands in the middle of the bar and every working agent stands to its left as its class and attacks it;
 with nobody working the dragon sleeps. The Agents list's top-right button (the sort one) has a Forest switch that puts the plain 42px tab bar back. Herdr's Settings has no place
 for mods, hence the menu.
 
 Art: `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
-one json each) and `python avatars/dragon.py avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
-turns them into the SVGs (32x32 shown at 80px, the 60x60 dragon at 150px, both 2.5x).
+one json each) and `python avatars/dragon_ref.py <reference image> avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
+turns them into the SVGs (32x32 shown at 80px, the 96x68 dragon at 240x170px, both 2.5x).
 
 ## 8-bit spaces (mods/kage-spaces)
 
