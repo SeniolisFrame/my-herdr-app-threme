@@ -88,10 +88,6 @@ function icon(p, size, color) {
 // Herdr gives a new space the theme color name ("ansi6") fewest spaces use; once all are hex
 // it would always pick ansi6, so each name is swapped for the kage hue fewest spaces have.
 const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a8325e"];
-// Each space's name color, as in mods/kage-spaces (kept in step by hand): a card's program
-// line takes its space's, so agents in different spaces read apart.
-const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
-  ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
 // Unifont at its native 16px for headings and card text (ships in mods/kage-spaces/fonts).
 const PIXEL = "Unifont";
 const SMALL = "Unifont";
@@ -381,7 +377,6 @@ export default class Agents extends View {
       const tab = tabs.get(a.tab);
       const own = tab?.named && tab.name !== a.program?.name ? tab.name : null;
       const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
-      const ink = NAME[(shared("space.colors") ?? {})[a.space]] ?? t.dim;
       // Bat card: hanging asleep while the agent idles, wings out and eyes glowing while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
       if (asleep) this.asleep = true; else this.awake = true;
@@ -418,8 +413,7 @@ export default class Agents extends View {
         .child(v_flex().flex_1().min_w(0).gap(3).font_family(SMALL).text_size(16).line_height("18px")
           .child(h_flex().gap(6).items_center().child(badge)
             .when(Boolean(when), (r) => r.child(div().text_size(16).text_color(t.dim).child(duration(now - when)))))
-          .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name))
-          .child(div().min_w(0).truncate().text_size(16).text_color(ink).child(a.space_name ?? "")))
+          .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name)))
         .when(Boolean(machine), el => el.child(div().text_size(10).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));
