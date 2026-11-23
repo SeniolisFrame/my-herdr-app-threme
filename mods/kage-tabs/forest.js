@@ -1,11 +1,11 @@
 import { div, image } from "gpui-kit";
 
 // kage: a forest behind the whole tab bar. Every working agent is a class-character swinging at the dragon,
-// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 56x56 dragon),
+// which stands in the middle of the bar. Art is in mods/kage-agents (avatars/*.svg: 32x32 sprites and a 60x60 dragon),
 // all drawn at 2.5x so the party and the boss share one pixel size.
 const ART = "mods/kage-agents/";
 const MAX = 4;                                   // characters shown; more show as "+N"
-const CHAR = 80, DRAGON = 140, STEP = 70, FLOOR = 8;
+const CHAR = 80, DRAGON = 150, STEP = 70, FLOOR = 8;
 export const HEIGHT = 171;                       // the tab bar's height while the forest is on (the layout's tabs block)
 export const PLAIN = 42;                         // and with it off
 
@@ -56,9 +56,9 @@ export function arena(party, now, color) {
       .children(shown.map((p, i) => image(`${ART}${p.cls}-${frames[i]}.svg`).absolute()
         .left(dx - 24 - (shown.length - i) * STEP + (frames[i] === "awake-down" ? 14 : 0)).top(top(CHAR)).w(CHAR).h(CHAR)))
       .when(party.length > MAX, el => el.child(div().absolute().left(dx - 24 - (MAX + 1) * STEP + 20).top(top(CHAR) - 22).text_size(16).text_color(color).child(`+${party.length - MAX}`)))
-      // Its breath: flames out of the maw (about 22px right, 51px down) toward the party.
-      .when(dragon === "dragon-attack", el => el.children([0, 1, 2, 3].map((k) => div().absolute()
-        .left(dx + 22 - 32 * (k + 1)).top(top(DRAGON) + 35 + k * 3).w(32).h(32 - k * 6)
-        .bg(["#fff3a0", "#ffb02e", "#ff6a1a", "#b83a1a"][k]))))
+      // Its breath: a wavy stream of flames out of the maw (about 18px right, 64px down in the art) toward the party.
+      .when(dragon === "dragon-attack", el => el.children([0, 1, 2, 3, 4].map((k) => div().absolute()
+        .left(dx + 18 - 30 * (k + 1)).top(top(DRAGON) + 64 - (30 - k * 4) / 2 + [0, -6, 2, -5, 3][(k + beat) % 5]).w(30).h(30 - k * 4)
+        .bg(["#fff3a0", "#ffd23f", "#ffb02e", "#ff6a1a", "#b83a1a"][k]))))
       .child(image(`${ART}${dragon}.svg`).absolute().left(dx).top(top(DRAGON)).w(DRAGON).h(DRAGON)));
 }
