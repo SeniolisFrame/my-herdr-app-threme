@@ -1,4 +1,4 @@
-# Copies the kage theme, the bat agent cards (mods/kage-agents), the 8-bit spaces list
+# Copies the kage theme, the dungeon agent cards (mods/kage-agents), the 8-bit spaces list
 # (mods/kage-spaces), tab bar (mods/kage-tabs) and pane header (mods/kage-pane) into herdr-app,
 # switches to kage, and points the current layout at all four with square 2px pane frames.
 # Run it again after every change or pull. -Theme midnight|sakura|forest|ember|ocean: another color set, same mods.
@@ -16,12 +16,14 @@ if (-not (Test-Path $programs)) { Copy-Item (Join-Path $PSScriptRoot "programs.j
 elseif ([IO.File]::ReadAllText($programs) -ne [IO.File]::ReadAllText((Join-Path $PSScriptRoot "programs.json"))) {
   Write-Host "programs.json exists: add the claude entry from $PSScriptRoot\programs.json by hand for the violet Claude icon." }
 Copy-Item (Join-Path $PSScriptRoot "mods\kage-agents\*") $mod -Force
+# A mod cannot import from another mod's folder: the tab bar scene gets its own copy of the class list.
+Copy-Item (Join-Path $PSScriptRoot "mods\kage-agents\classes.js") (Join-Path $app "mods\kage-tabs") -Force
 # Bigger text for Unifont in my-herdr-app's Files and Changes (it reads this file; restart herdr-app).
 # Someone's own file is left alone.
 $text = Join-Path $app "my-herdr-text.json"
 if (-not (Test-Path $text) -or [IO.File]::ReadAllText($text) -eq [IO.File]::ReadAllText((Join-Path $PSScriptRoot "my-herdr-text.json"))) { Copy-Item (Join-Path $PSScriptRoot "my-herdr-text.json") $text -Force }
 else { Write-Host "my-herdr-text.json exists: set the sizes from $PSScriptRoot\my-herdr-text.json by hand." }
-# Both avatars go in: the Agents list's menu (the sort button) picks one.
+# Every class and the dragon go in: the cards and the tab bar pick from them.
 Copy-Item (Join-Path $PSScriptRoot "avatars\*.svg") $mod -Force
 # Left for installers that rewrite a layout (my-herdr-app's): they run it after, kage stays.
 $hooks = Join-Path $app "after-layout"

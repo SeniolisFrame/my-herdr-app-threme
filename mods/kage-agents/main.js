@@ -2,6 +2,7 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
+import { CLASSES, classFor } from "./classes.js";
 import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout } from "herdr";
 
 function find(node, id) {
@@ -64,9 +65,9 @@ const SORTS = [
   { id: "grouped", label: "Grouped by space", icon: "layers" },
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
-// The card's avatar (art in this folder as <id>-awake*.svg and <id>-sleep*.svg), picked in the sort popup.
-const PETS = [{ id: "bat", label: "Bat" }, { id: "witch", label: "Witch" }];
-const petOf = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "bat";
+// The card's avatar is the agent's dungeon class (art in this folder as <id>-awake*.svg and <id>-sleep*.svg): random
+// per agent unless picked by clicking the avatar (agents.classes: { address: class id }).
+const classOf = (a) => classFor(a.address, shared("agents.classes"));
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
@@ -94,7 +95,7 @@ const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "I
 
 export default class Agents extends View {
   init(_props, cx) {
-    if (props()?.sortMenu) return;
+    if (props()?.sortMenu || props()?.classMenu) return;
     this.folded = new Set();
     // Each agent's last state and when it changed (ms), kept across restarts.
     try { this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { this.changed = {}; }
@@ -180,9 +181,24 @@ export default class Agents extends View {
       .child(head("Sort agents", 4))
       .children(SORTS.map((s) => row(`sort-${s.id}`, s.label, svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted),
         s.id === sortOf().id, () => setShared("agents.sort", s.id))))
-      .child(head("Avatar", 8))
-      .children(PETS.map((p) => row(`pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep.svg`).w(18).h(18).flex_none(),
-        p.id === petOf(), () => setShared("agents.pet", p.id))));
+      .child(head("Dungeon", 8))
+      .child(row("dungeon", "Scene in the tab bar", image("mods/kage-agents/dragon-idle.svg").w(18).h(18).flex_none(),
+        !shared("dungeon.off"), () => setShared("dungeon.off", !shared("dungeon.off"))));
+  }
+
+  // Click an agent's avatar: pick its class, or Random to go back to the one its id gives.
+  classMenu(t, addr) {
+    const mine = shared("agents.classes") ?? {};
+    const row = (id, label, icon, on, pick) => h_flex().id(id).h(31).px(8).gap(9).rounded(7).items_center().text_color(t.foreground)
+      .hover((el) => el.bg(t.hover)).on_click(() => { pick(); closeOverlay(props().overlay); })
+      .child(icon).child(div().flex_1().child(label))
+      .when(on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)));
+    const set = (id) => { const next = { ...mine }; if (id) next[addr] = id; else delete next[addr]; setShared("agents.classes", next); };
+    return v_flex().w_full().p(5).bg(t.popover).text_size(12.8)
+      .child(div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child("Class"))
+      .children(CLASSES.map((c) => row(`class-${c.id}`, c.label, image(`mods/kage-agents/${c.id}-sleep.svg`).w(18).h(18).flex_none(),
+        mine[addr] === c.id, () => set(c.id))))
+      .child(row("class-random", "Random", div().w(18).h(18).flex_none(), !CLASSES.some((c) => c.id === mine[addr]), () => set(null)));
   }
 
   peek(addr) {
@@ -241,6 +257,7 @@ export default class Agents extends View {
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
+    if (props()?.classMenu) return this.classMenu(t, props().classMenu);
     const cols = { ...(shared("space.colors") ?? {}) };
     const named = Object.keys(cols).filter((k) => !cols[k].startsWith("#"));
     for (const k of named) {
@@ -376,11 +393,12 @@ export default class Agents extends View {
       const tab = tabs.get(a.tab);
       const own = tab?.named && tab.name !== a.program?.name ? tab.name : null;
       const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
-      // Bat card: hanging asleep while the agent idles, wings out and eyes glowing while it works.
+      // Class card: dozing while the agent idles, weapon out and eyes open while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
       if (asleep) this.asleep = true; else this.awake = true;
-      const face = div().relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
+      const face = div().id(`face-${a.address}`).relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas).cursor_pointer().tooltip("Change class")
+        .on_click((_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { classMenu: a.address } }); })
+        .child(image(`mods/kage-agents/${classOf(a)}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
@@ -484,7 +502,7 @@ export default class Agents extends View {
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
                 .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { sortMenu: true } }))
-                .tooltip(`Sort agents: ${sort.label}; avatar`)
+                .tooltip(`Sort agents: ${sort.label}; dungeon`)
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
         ),

@@ -24,28 +24,25 @@ Same layout, other colors: `.\install.ps1 -Theme <name>`, back with `.\install.p
 
 Text colors keep at least 4.5:1 contrast on the backgrounds.
 
-Pick the avatar in the Agents list, not in the theme: its top-right button (the sort one) opens a menu with
-Sort agents and Avatar, Bat or Witch, and either works with either theme. The witch is a cute girl with long pink hair
-(staff orb pulsing and sparks while the agent works, dozing under her hat with z's while it idles), drawn by `avatars/witch.py`.
-Herdr's Settings has no place for mods, hence the menu.
+## Dungeon cards and tab bar (mods/kage-agents, mods/kage-tabs)
+
+A copy of herdr's Agents list where each agent is a card with a 32x32 pixel class: swordsman, rogue, priest,
+reaper or witch. Each agent gets one at random (stable: the same agent keeps it); click the avatar on its card to
+pick another, or Random. It dozes with z's while the agent idles and swings its weapon while it works. Each card is
+named after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange
+(install writes it only if you have none). It also paints the space tiles in kage hues (violet, crimson, indigo,
+plum, dusk, wine) in place of the stock teal/orange/blue.
 
 ![witch](avatars/witch-preview.png)
 
-## Bat cards (mods/kage-agents)
+The tab bar is a dungeon (88px tall, brick wall and torches behind the tabs): every working agent stands at the
+right as its class and attacks a dragon boss; with nobody working the dragon sleeps. The Agents list's top-right
+button (the sort one) has a Dungeon switch that puts the plain 42px tab bar back. Herdr's Settings has no place
+for mods, hence the menu.
 
-A copy of herdr's Agents list where each agent is a card with an 8-bit bat: wings spread, red
-eyes, one glowing with a flare, and a violet aura, flapping, while the agent works or needs you;
-hanging upside down from a branch, wings wrapped round, with z's rising while it idles. Each card is named
-after its terminal's folder, like the tabs, with its space's name underneath in that
-space's color. `programs.json` draws the Claude icon in violet instead of orange (install writes
-it only if you have none). It also paints the
-space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
-teal/orange/blue.
-
-![bats](avatars/preview.png)
-
-`python avatars/draw.py avatars/avatars.json` draws the two 32x32 pixel grids, `node avatars/build.mjs`
-turns them into the SVGs (shown at 64px, 2x).
+Art: `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
+one json each) and `python avatars/dragon.py avatars/dragon.json` draw the pixel grids, `node avatars/build.mjs`
+turns them into the SVGs (32x32 shown at 64px, the 40x40 dragon at 80px, both 2x).
 
 ## 8-bit spaces (mods/kage-spaces)
 
@@ -87,6 +84,7 @@ APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
 mkdir -p "$APP/themes" "$APP/mods/kage-agents"
 cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/*.svg "$APP/mods/kage-agents/"
 cp -r mods/kage-spaces mods/kage-tabs mods/kage-pane "$APP/mods/"
+cp mods/kage-agents/classes.js "$APP/mods/kage-tabs/"
 herdr-app do app.theme --name kage
 ```
 
