@@ -1,7 +1,7 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
 import { spaces, panes, agents, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
-import { backdrop, fighters, HEIGHT, PLAIN } from "./dungeon.js";
+import { backdrop, arena, HEIGHT, PLAIN } from "./forest.js";
 import { classFor } from "./classes.js";
 
 // kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at
@@ -47,7 +47,7 @@ export default class Tabs extends View {
     try { this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}"); } catch { this.panels = {}; }
     if (!this.panels || typeof this.panels !== "object" || Array.isArray(this.panels)) this.panels = {};
     this.swipe = { acc: 0, steps: 0, at: 0, last: 0 };
-    // The dungeon redraws only when a working agent's frame changes (every 250ms); nobody working, no redraws.
+    // The forest redraws only when a working agent's frame changes (every 250ms); nobody working, no redraws.
     cx.timer.every(125, (cx) => {
       const step = Math.floor(Date.now() / 250);
       if (this.working && step !== this.step) { this.step = step; cx.notify(); }
@@ -119,7 +119,7 @@ export default class Tabs extends View {
     const stop = (_e, cx) => cx.stop_propagation();
     const button = (id, label, action) => div().id(id).size(26).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", stop).on_click(action).child(label);
-    // In the tall dungeon bar the tabs stand on the floor and the window buttons stay at the top.
+    // In the tall forest bar the tabs stand on the floor and the window buttons stay at the top.
     const winButton = (...a) => button(...a).when(!shared("dungeon.off"), el => el.self_start().mt(8));
     const ink = NAME[(shared("space.colors") ?? {})[space?.id]] ?? t.accent;
     const item = (c, i) => {
@@ -151,7 +151,7 @@ export default class Tabs extends View {
     const lightsPadding = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
       ? Math.max(10, (root.traffic_lights[0] + 64) / settings().zoom - (sidebar?.hidden ? 0 : sidebar?.size?.px ?? 0))
       : 10;
-    // The bar is taller with the dungeon behind it, plain 42px without.
+    // The bar is taller with the forest behind it, plain 42px without.
     const bar = find(root, "tabs")?.size?.px;
     if (bar && bar !== (dungeon ? HEIGHT : PLAIN)) run("layout.resize", { id: "tabs", px: dungeon ? HEIGHT : PLAIN });
     const panel = find(root, "panel"), body = find(root, "panel-body");
@@ -168,13 +168,12 @@ export default class Tabs extends View {
         }).child(svg(icon).size(14)).child(label);
     };
     return h_flex().relative().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().when(dungeon, el => el.items_end().pb(10)).bg(t.chrome).border_b(1).border_color(t.border).font_family(PIXEL)
-      .when(dungeon, el => el.child(backdrop(Date.now())))
+      .when(dungeon, el => el.child(backdrop(Date.now())).child(arena(party, Date.now(), t.accent)))
       .on_mouse_up("left", () => { this.pressed = null; })
       .on_scroll_wheel(e => this.wheel(e))
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).when(dungeon, el => el.h(36)).when(!dungeon, el => el.h_full()).items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
         .children(shown.map(item)))
-      .when(dungeon, el => el.child(fighters(party, Date.now(), t.accent)))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))

@@ -65,7 +65,7 @@ const SORTS = [
   { id: "grouped", label: "Grouped by space", icon: "layers" },
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
-// The card's avatar is the agent's dungeon class (art in this folder as <id>-awake*.svg and <id>-sleep*.svg): random
+// The card's avatar is the agent's class (art in this folder as <id>-awake*.svg and <id>-sleep*.svg): random
 // per agent unless picked by clicking the avatar (agents.classes: { address: class id }).
 const classOf = (a) => classFor(a.address, shared("agents.classes"));
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
@@ -181,8 +181,8 @@ export default class Agents extends View {
       .child(head("Sort agents", 4))
       .children(SORTS.map((s) => row(`sort-${s.id}`, s.label, svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted),
         s.id === sortOf().id, () => setShared("agents.sort", s.id))))
-      .child(head("Dungeon", 8))
-      .child(row("dungeon", "Scene in the tab bar", image("mods/kage-agents/dragon-idle.svg").w(18).h(18).flex_none(),
+      .child(head("Forest", 8))
+      .child(row("dungeon", "Forest in the tab bar", image("mods/kage-agents/dragon-idle.svg").w(18).h(18).flex_none(),
         !shared("dungeon.off"), () => setShared("dungeon.off", !shared("dungeon.off"))));
   }
 
@@ -502,7 +502,7 @@ export default class Agents extends View {
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
                 .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { sortMenu: true } }))
-                .tooltip(`Sort agents: ${sort.label}; dungeon`)
+                .tooltip(`Sort agents: ${sort.label}; forest`)
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
         ),

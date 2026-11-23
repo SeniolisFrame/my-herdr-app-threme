@@ -24,7 +24,7 @@ Same layout, other colors: `.\install.ps1 -Theme <name>`, back with `.\install.p
 
 Text colors keep at least 4.5:1 contrast on the backgrounds.
 
-## Dungeon cards and tab bar (mods/kage-agents, mods/kage-tabs)
+## Forest tab bar and class cards (mods/kage-agents, mods/kage-tabs)
 
 A copy of herdr's Agents list where each agent is a card with a 32x32 pixel class: swordsman, rogue, priest,
 reaper or witch. Each agent gets one at random (stable: the same agent keeps it); click the avatar on its card to
@@ -35,9 +35,9 @@ plum, dusk, wine) in place of the stock teal/orange/blue.
 
 ![witch](avatars/witch-preview.png)
 
-The tab bar is a dungeon (128px tall, brick wall and torches behind the tabs): every working agent stands at the
-right as its class and attacks a dragon boss; with nobody working the dragon sleeps. The Agents list's top-right
-button (the sort one) has a Dungeon switch that puts the plain 42px tab bar back. Herdr's Settings has no place
+The tab bar is a forest (171px tall: pines, a moon and fireflies behind the tabs, which stand on the grass): the
+dragon boss stands in the middle of the bar and every working agent stands to its left as its class and attacks it;
+with nobody working the dragon sleeps. The Agents list's top-right button (the sort one) has a Forest switch that puts the plain 42px tab bar back. Herdr's Settings has no place
 for mods, hence the menu.
 
 Art: `python avatars/witch.py avatars/witch.json`, `python avatars/classes.py avatars` (the four other classes,
