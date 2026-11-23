@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const dir = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
-for (const file of ["avatars.json", "witch.json", "dragon.json"]) {
+for (const file of ["avatars.json", "witch.json", "dragon.json", "swordsman.json", "rogue.json", "priest.json", "reaper.json"]) {
 const { palette, avatars } = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
 for (const [name, rows] of Object.entries(avatars)) {
   const n = rows.length;
