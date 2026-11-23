@@ -92,10 +92,9 @@ const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a83
 // line takes its space's, so agents in different spaces read apart.
 const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
   ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
-// Headings in the 8-bit Spaces list's font at its native 16px; card text in a narrower
-// pixel font at its native 11px (both ship in mods/kage-spaces/fonts).
-const PIXEL = "PxPlus IBM VGA 8x16";
-const SMALL = "Pixelated MS Sans Serif";
+// Unifont at its native 16px for headings and card text (ships in mods/kage-spaces/fonts).
+const PIXEL = "Unifont";
+const SMALL = "Unifont";
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
 
 export default class Agents extends View {
@@ -389,7 +388,7 @@ export default class Agents extends View {
       const face = div().relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
         .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
-      const badge = div().flex_none().px(5).h(15).rounded(3).border_1().border_color(tint).text_size(11).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
+      const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
         .id(`ag-${a.address}`)
         .px(6)
@@ -416,11 +415,11 @@ export default class Agents extends View {
             this.folded.has(a.address) ? this.folded.delete(a.address) : this.folded.add(a.address);
             cx.notify();
           })).child(face))
-        .child(v_flex().flex_1().min_w(0).gap(3).font_family(SMALL).text_size(11).line_height("13px")
+        .child(v_flex().flex_1().min_w(0).gap(3).font_family(SMALL).text_size(16).line_height("18px")
           .child(h_flex().gap(6).items_center().child(badge)
-            .when(Boolean(when), (r) => r.child(div().text_size(11).text_color(t.dim).child(duration(now - when)))))
+            .when(Boolean(when), (r) => r.child(div().text_size(16).text_color(t.dim).child(duration(now - when)))))
           .child(div().min_w(0).truncate().font_bold().text_color(idle ? t.muted : t.foreground).child(name))
-          .child(div().min_w(0).truncate().text_size(11).text_color(ink).child(a.space_name ?? "")))
+          .child(div().min_w(0).truncate().text_size(16).text_color(ink).child(a.space_name ?? "")))
         .when(Boolean(machine), el => el.child(div().text_size(10).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));

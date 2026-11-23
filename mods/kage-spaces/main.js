@@ -31,7 +31,7 @@ const RAIL_CELL = 32;
 // kage: an 8-bit list. VGA pixel font (ships with Herdr; copied into fonts/ here) at its
 // native 16px so it stays crisp; no tiles, each name in its space's color, lightened to read
 // on black (all at least 5.9:1 on the sidebar's backgrounds).
-const PIXEL = "PxPlus IBM VGA 8x16";
+const PIXEL = "Unifont";
 const PX = 16;
 const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
   ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };

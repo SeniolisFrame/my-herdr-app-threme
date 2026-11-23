@@ -9,7 +9,7 @@ import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { panes, props, run, theme, home, layout } from "herdr";
 
-const PIXEL = "PxPlus IBM VGA 8x16";
+const PIXEL = "Unifont";
 
 // Match the first visible tab frame, including the active child of a stack.
 function paneFrame(node) {

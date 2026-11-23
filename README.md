@@ -49,11 +49,12 @@ turns them into the SVGs (shown at 64px, 2x).
 
 ## 8-bit spaces (mods/kage-spaces)
 
-A copy of herdr's Spaces list in a VGA pixel font at its native 16px: no letter tiles, each
+A copy of herdr's Spaces list in a pixel font (with Thai) at its native 16px: no letter tiles, each
 space's name in its own color (lightened to read on black, at least 5.9:1), a colored bar on
-the open one, no repo, branch or ahead/behind counts. The font is [PxPlus IBM VGA 8x16](https://int10h.org/oldschool-pc-fonts/) by VileR,
-CC BY-SA 4.0 (`mods/kage-spaces/fonts/LICENSE-PxPlus.txt`). The agent cards' text is in
-Pixelated MS Sans Serif by lou, CC BY-SA 3.0 (`LICENSE-MSSansSerif.txt` there). Herdr ships both.
+the open one, no repo, branch or ahead/behind counts. Every kage mod uses [GNU Unifont](https://unifoundry.com/unifont/), SIL OFL 1.1
+(`mods/kage-spaces/fonts/LICENSE-Unifont.txt`). The file in that folder is trimmed to Latin, Thai,
+punctuation, arrows and box drawing (35KB); herdr loads fonts from a mod's `fonts/` folder at start.
+To use it in the terminal too, set `"font": "Unifont"` (and `"ui_font"` for other mods) in herdr-app's `settings.json`.
 
 ## 8-bit tab bar (mods/kage-tabs)
 
