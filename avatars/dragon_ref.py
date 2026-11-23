@@ -1,7 +1,7 @@
-# Boss dragon as pixel art made from a reference drawing (a person's fan art of a crouching dragon with a tail flame; the
-# reference itself is not in this repo). Removes the white background, recolours (crimson body, amber underside, violet
-# wings, orange flame: the original's dark grey would vanish on the forest), shrinks to H pixels tall, limits the palette,
-# adds a dark outline. Frames: idle, idle-1 (1px lower), attack (flame brighter), hit (pink), sleep (darker, "z").
+# Black boss dragon as pixel art made from a reference drawing (a person's fan art of a crouching dragon with a tail flame; the
+# reference itself is not in this repo). Removes the white background, recolours (black body with a pale rim, amber underside,
+# blue wings, orange flame), shrinks to H pixels tall, limits the palette,
+# adds a pale outline. Frames: idle, idle-1 (1px lower), attack (flame brighter), hit (pink), sleep (darker, "z").
 #   python avatars/dragon_ref.py <reference image> avatars/dragon.json, then node avatars/build.mjs
 import colorsys, json, sys
 from PIL import Image, ImageFilter
@@ -24,8 +24,8 @@ px, ap = src.load(), alpha.load()
 
 # 2. recolour full size (before shrinking, so the shrink averages the new colours)
 def lerp(a, b, t): return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
-RAMPS = {"body": ((28, 2, 12), (196, 40, 54)), "belly": ((214, 120, 40), (255, 214, 120)),
-         "wing": ((50, 28, 110), (160, 120, 240)), "flame": ((214, 60, 14), (255, 196, 60))}
+RAMPS = {"body": ((4, 4, 10), (84, 90, 112)), "belly": ((214, 120, 40), (255, 214, 120)),
+         "wing": ((24, 20, 80), (80, 100, 190)), "flame": ((214, 60, 14), (255, 196, 60))}
 out = Image.new("RGB", src.size)
 op = out.load()
 flame = set()
@@ -70,7 +70,7 @@ q = rgb.quantize(colors=13, method=Image.Quantize.MEDIANCUT, dither=Image.Dither
 cells = [[(q.getpixel((x, y)) if alpha_small.getpixel((x, y)) else None) for x in range(W)] for y in range(H)]
 
 # 5. outline: the empty cells touching the figure
-OUT = (26, 10, 16)
+OUT = (120, 140, 180)                                  # a pale rim: a black body would vanish on the dark forest
 PAD = 2
 cells = [[None] * (W + 2 * PAD) for _ in range(PAD)] + [[None] * PAD + r + [None] * PAD for r in cells] + [[None] * (W + 2 * PAD) for _ in range(PAD)]
 HH, WW = len(cells), len(cells[0])
