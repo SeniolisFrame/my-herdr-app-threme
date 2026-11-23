@@ -1,7 +1,7 @@
 // The dungeon classes (art: <id>-awake*.svg and <id>-sleep*.svg next to this file). Shared by the agent cards and the tab bar scene.
 export const CLASSES = [
   { id: "swordsman", label: "Swordsman" }, { id: "rogue", label: "Rogue" }, { id: "priest", label: "Priest" },
-  { id: "reaper", label: "Reaper" }, { id: "witch", label: "Witch" },
+  { id: "reaper", label: "Reaper" }, { id: "witch", label: "Witch" }, { id: "spear", label: "Spear" },
 ];
 
 // An agent's class: the one the person picked (chosen: { [agent id]: class id }), else a stable random one from its id.

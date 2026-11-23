@@ -47,9 +47,9 @@ export default class Tabs extends View {
     try { this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}"); } catch { this.panels = {}; }
     if (!this.panels || typeof this.panels !== "object" || Array.isArray(this.panels)) this.panels = {};
     this.swipe = { acc: 0, steps: 0, at: 0, last: 0 };
-    // The forest redraws only when a working agent's frame changes (every 250ms); nobody working, no redraws.
-    cx.timer.every(125, (cx) => {
-      const step = Math.floor(Date.now() / 250);
+    // The forest redraws only when a working agent's frame changes (every 110ms); nobody working, no redraws.
+    cx.timer.every(55, (cx) => {
+      const step = Math.floor(Date.now() / 110);
       if (this.working && step !== this.step) { this.step = step; cx.notify(); }
     });
   }

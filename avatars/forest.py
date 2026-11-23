@@ -1,6 +1,6 @@
 # The tab bar's backdrop: a misty twilight pine forest in layers (pale far trees fading into a dim mist, darker mid trees,
 # near trees, black foreground trunks with branches). Trees all the way across: no bright clearing in the middle.
-# 640x60 art pixels, written 3x as a PNG (1920x180). python avatars/forest.py mods/kage-tabs/forest-bg.png
+# 640x74 art pixels, written 3x as a PNG (1920x222). python avatars/forest.py mods/kage-tabs/forest-bg.png
 import math, random, sys
 from PIL import Image, ImageDraw
 
@@ -71,4 +71,9 @@ for x in range(0, W, 2):                                            # grass and 
 for x in range(0, W):                                               # dark floor edge
     draw.point((x, H - 1), fill=DEEP); draw.point((x, H - 2), fill=FORE if x % 3 else DEEP)
 
-img.resize((W * S, H * S), Image.NEAREST).save(sys.argv[1])
+# 14 more rows on top: the sky and the trunks simply carry on up, so the bar can be taller than the picture was drawn
+TOP = 14
+tall = Image.new("RGB", (W, H + TOP))
+tall.paste(img, (0, TOP))
+for y in range(TOP): tall.paste(img.crop((0, 0, W, 1)), (0, y))
+tall.resize((W * S, (H + TOP) * S), Image.NEAREST).save(sys.argv[1])

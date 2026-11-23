@@ -182,7 +182,7 @@ export default class Agents extends View {
       .children(SORTS.map((s) => row(`sort-${s.id}`, s.label, svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted),
         s.id === sortOf().id, () => setShared("agents.sort", s.id))))
       .child(head("Forest", 8))
-      .child(row("dungeon", "Forest in the tab bar", image("mods/kage-agents/dragon-idle.svg").w(18).h(18).flex_none(),
+      .child(row("dungeon", "Forest in the tab bar", image("mods/kage-agents/dragon-icon.png").w(24).h(24).flex_none(),
         !shared("dungeon.off"), () => setShared("dungeon.off", !shared("dungeon.off"))));
   }
 
@@ -196,7 +196,7 @@ export default class Agents extends View {
     const set = (id) => { const next = { ...mine }; if (id) next[addr] = id; else delete next[addr]; setShared("agents.classes", next); };
     return v_flex().w_full().p(5).bg(t.popover).text_size(12.8)
       .child(div().px(8).pt(4).pb(6).text_size(11).text_color(t.dim).child("Class"))
-      .children(CLASSES.map((c) => row(`class-${c.id}`, c.label, image(`mods/kage-agents/${c.id}-sleep.svg`).w(18).h(18).flex_none(),
+      .children(CLASSES.map((c) => row(`class-${c.id}`, c.label, image(`mods/kage-agents/${c.id}-icon.png`).w(24).h(24).flex_none(),
         mine[addr] === c.id, () => set(c.id))))
       .child(row("class-random", "Random", div().w(18).h(18).flex_none(), !CLASSES.some((c) => c.id === mine[addr]), () => set(null)));
   }
@@ -398,7 +398,7 @@ export default class Agents extends View {
       if (asleep) this.asleep = true; else this.awake = true;
       const face = div().id(`face-${a.address}`).relative().w(66).h(66).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas).cursor_pointer().tooltip("Change class")
         .on_click((_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { classMenu: a.address } }); })
-        .child(image(`mods/kage-agents/${classOf(a)}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.svg`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
+        .child(image(`mods/kage-agents/${classOf(a)}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : wings}.png`).absolute().left(0).top(asleep ? 0 : bob).w(64).h(64));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
