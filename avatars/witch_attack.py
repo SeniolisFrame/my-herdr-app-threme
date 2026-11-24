@@ -25,7 +25,7 @@ def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, 
             r, g, b = colorsys.hls_to_rgb(0.055, min(l + (1 - l) * 0.55, 0.97), s * 0.45)
             px[x, y] = (round(r * 255), round(g * 255), round(b * 255), a)
     return im
-MOVES = ["strike", "fireball", "circle", "lightning", "hand", "twirl"]
+MOVES = ["strike", "fireball", "circle", "lightning", "hand", "twirl", "done", "plead"]  # done, plead: the DONE and NEEDS YOU cards
 load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA"))
 
 for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)]), ("witch-black", "witch_black", ["sleep_2", "sleep_3", "sleep_4"])]:

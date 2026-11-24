@@ -94,10 +94,14 @@ const moveOf = (address) => {
   const m = ownMove(address) ?? moveSetting();
   return m === "random" ? MOVES[hash(String(address)) % MOVES.length].id : m;
 };
+// DONE cheers (hand up, a jump) and NEEDS YOU pleads (hands clasped), whatever the move.
+const STATUS_MOVE = { done: "done", blocked: "plead" };
+const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } });
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
+const BOARD = [["blocked", "Needs you"], ["working", "Working"], ["done", "Done"], ["idle", "Idle"]];
 
 function duration(ms) {
   const m = Math.floor(ms / 60000);
@@ -293,6 +297,22 @@ export default class Agents extends View {
     return div().size(7).mx(3).flex_none().rounded(4).bg(a.status === "done" ? color : t.dim + "00");
   }
 
+  // props.board (my-herdr-app's top band, through kage-layout.ps1): the same witch cards in four
+  // columns by status (no status counts as idle), newest change first. Next / previous agent keep the
+  // list's order: the sidebar sets it too, and two orders would take turns.
+  board(t, list, row) {
+    const cols = BOARD.map(([status, label]) => ({ status, label, members: list.filter((a) => (LABEL[a.status] ? a.status : "idle") === status).sort((x, y) => this.since(y) - this.since(x)) }));
+    return h_flex().size_full().min_h(0).bg(t.chrome).px(10).pt(4).gap(10).text_size(13)
+      .children(cols.map((c) => v_flex().flex_1().min_w(0).h_full()
+        .child(h_flex().h(28).flex_none().px(2).gap(8).items_center().font_family(PIXEL).text_size(16)
+          .child(div().text_color(t[c.status] ?? t.dim).child(c.label))
+          .child(div().text_color(t.dim).child(String(c.members.length)))
+          .when(c.status === "idle", (el) => el.child(div().flex_1()).child(div().id("ag-sort").text_color(t.dim).hover((s) => s.text_color(t.foreground))
+            .on_click(openSortMenu)
+            .tooltip("Avatar and move").child(svg("mods/workspace-chrome/layers.svg").size(14)))))
+        .child(v_flex().id(`col-${c.status}`).flex_1().min_h(0).overflow_y_scrollbar().children(c.members.map((a, i) => row(a, i))))));
+  }
+
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
@@ -435,7 +455,7 @@ export default class Agents extends View {
       const pet = petObj(a.address);
       if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
       const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
@@ -477,6 +497,7 @@ export default class Agents extends View {
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));
     };
+    if (props()?.board) return this.board(t, list, row);
 
     // Groups in list order: spaces (grouped) or priority sections. Agents of a
     // space are next to each other in agents(), so neighbours make a group.
@@ -543,7 +564,7 @@ export default class Agents extends View {
                 .text_size(11)
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
-                .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } }))
+                .on_click(openSortMenu)
                 .tooltip(`Sort agents: ${sort.label}; avatar, move`)
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
