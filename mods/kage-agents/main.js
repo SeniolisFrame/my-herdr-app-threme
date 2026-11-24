@@ -68,9 +68,18 @@ const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[
 // idles (the blue witch nods off in 8 quick frames, the black one dozes in 3 slow ones).
 // The art is drawn at this size (avatars/witch_attack.py), so it is shown 1:1.
 const PETS = [{ id: "witch", label: "Blue witch", sleep: 8, ms: 250 }, { id: "witch-black", label: "Black witch", sleep: 3, ms: 750 }];
-const petObj = () => PETS.find((p) => p.id === shared("agents.pet")) ?? PETS.find((p) => p.id === "witch-black");
-const petOf = () => petObj().id;
-const snoreAt = (now) => Math.floor(now / petObj().ms) % petObj().sleep;
+// One agent's own witch and move, set by right-clicking its card: { [address]: { pet?, move? } } (persisted).
+const picks = () => shared("agents.picks") ?? {};
+const pick = (address, key, value) => {
+  const all = { ...picks() }, own = { ...all[address], [key]: value };
+  if (value === undefined) delete own[key];
+  if (Object.keys(own).length) all[address] = own; else delete all[address];
+  setShared("agents.picks", all);
+};
+const petAll = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "witch-black";
+const petObj = (address) => PETS.find((p) => p.id === (picks()[address]?.pet ?? petAll())) ?? PETS.find((p) => p.id === "witch-black");
+const petOf = (address) => petObj(address).id;
+const snoreAt = (now, pet) => Math.floor(now / pet.ms) % pet.sleep;
 // Each witch's moves while an agent works (<pet>-<id>-0..8.png; the cast is atk). "random" gives each agent one of
 // them, the same one every time (by its address).
 const MOVES = [
@@ -79,9 +88,10 @@ const MOVES = [
   { id: "twirl", label: "Staff twirl" },
 ];
 const moveSetting = () => MOVES.find((m) => m.id === shared("agents.move"))?.id ?? "random";
+const ownMove = (address) => MOVES.find((m) => m.id === picks()[address]?.move)?.id;
 const hash = (s) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261); // FNV-1a
 const moveOf = (address) => {
-  const m = moveSetting();
+  const m = ownMove(address) ?? moveSetting();
   return m === "random" ? MOVES[hash(String(address)) % MOVES.length].id : m;
 };
 const FACE = 96;
@@ -111,9 +121,25 @@ const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a83
 const PIXEL = "Unifont";
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
 
+// A popup menu's row (icon, label, a check when on; a click picks and closes) and its section heading.
+const menuRow = (t) => (id, label, icon, on, pick) => h_flex()
+  .id(id)
+  .h(31)
+  .px(8)
+  .gap(9)
+  .rounded(7)
+  .items_center()
+  .text_color(t.foreground)
+  .hover((el) => el.bg(t.hover))
+  .on_click(() => { pick(); closeOverlay(props().overlay); })
+  .child(icon)
+  .child(div().flex_1().child(label))
+  .when(on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)));
+const menuHead = (t) => (text, pt) => div().px(8).pt(pt).pb(6).text_size(11).text_color(t.dim).child(text);
+
 export default class Agents extends View {
   init(_props, cx) {
-    if (props()?.sortMenu) return;
+    if (props()?.sortMenu || props()?.agentMenu) return;
     this.folded = new Set();
     // Each agent's last state and when it changed (ms), kept across restarts.
     try { this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { this.changed = {}; }
@@ -122,12 +148,14 @@ export default class Agents extends View {
     if (!Array.isArray(this.pendingPins)) this.pendingPins = [];
     if (!this.pendingPins.length) localStorage.removeItem("pins");
     this.migratingPins = new Set();
+    this.sleepers = []; // the witches asleep on a card now, each stepping on her own clock
+    this.snore = new Map();
     cx.timer.every(30000, (cx) => cx.notify());
     // The awake witch changes frame 8 times a second; asleep, every 250 or 750ms. No cards, no redraws.
     // Checked twice per step and redrawn only when the step changes, so a late tick can't skip one.
     cx.timer.every(BEAT, (cx) => {
       const now = Date.now();
-      if ((this.awake && Math.floor(now / BEAT) % FRAMES !== this.step) || (this.asleep && snoreAt(now) !== this.snore)) cx.notify();
+      if ((this.awake && Math.floor(now / BEAT) % FRAMES !== this.step) || this.sleepers.some((p) => snoreAt(now, p) !== this.snore.get(p.id))) cx.notify();
     });
   }
 
@@ -177,20 +205,7 @@ export default class Agents extends View {
   }
 
   sortMenu(t) {
-    const row = (id, label, icon, on, pick) => h_flex()
-      .id(id)
-      .h(31)
-      .px(8)
-      .gap(9)
-      .rounded(7)
-      .items_center()
-      .text_color(t.foreground)
-      .hover((el) => el.bg(t.hover))
-      .on_click(() => { pick(); closeOverlay(props().overlay); })
-      .child(icon)
-      .child(div().flex_1().child(label))
-      .when(on, (el) => el.child(svg("mods/workspace-chrome/check.svg").size(14).flex_none().text_color(t.foreground)));
-    const head = (text, pt) => div().px(8).pt(pt).pb(6).text_size(11).text_color(t.dim).child(text);
+    const row = menuRow(t), head = menuHead(t);
     return v_flex()
       .w_full()
       .p(5)
@@ -201,12 +216,28 @@ export default class Agents extends View {
         s.id === sortOf().id, () => setShared("agents.sort", s.id))))
       .child(head("Avatar", 8))
       .children(PETS.map((p) => row(`pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep-0.png`).w(18).h(18).flex_none(),
-        p.id === petOf(), () => setShared("agents.pet", p.id))))
+        p.id === petAll(), () => setShared("agents.pet", p.id))))
       .child(head("Move", 8))
       .child(row("move-random", "Random", div().w(18).flex_none().text_color(t.muted).child("?"), moveSetting() === "random",
         () => setShared("agents.move", "random")))
-      .children(MOVES.map((m) => row(`move-${m.id}`, m.label, image(`mods/kage-agents/${petOf()}-${m.id}-4.png`).w(18).h(18).flex_none(),
+      .children(MOVES.map((m) => row(`move-${m.id}`, m.label, image(`mods/kage-agents/${petAll()}-${m.id}-4.png`).w(18).h(18).flex_none(),
         m.id === moveSetting(), () => setShared("agents.move", m.id))));
+  }
+
+  // Right-click on a card: this agent's own witch and move; "As all" goes back to the sort menu's choice.
+  agentMenu(t, address) {
+    const own = picks()[address] ?? {};
+    const row = menuRow(t), head = menuHead(t), none = () => div().w(18).flex_none();
+    const pet = petOf(address);
+    return v_flex().w_full().p(5).bg(t.popover).text_size(12.8)
+      .child(head("This agent's witch", 4))
+      .child(row("own-pet-all", "As all", none(), !own.pet, () => pick(address, "pet", undefined)))
+      .children(PETS.map((p) => row(`own-pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep-0.png`).w(18).h(18).flex_none(),
+        own.pet === p.id, () => pick(address, "pet", p.id))))
+      .child(head("Move", 8))
+      .child(row("own-move-all", "As all", none(), !own.move, () => pick(address, "move", undefined)))
+      .children(MOVES.map((m) => row(`own-move-${m.id}`, m.label, image(`mods/kage-agents/${pet}-${m.id}-4.png`).w(18).h(18).flex_none(),
+        own.move === m.id, () => pick(address, "move", m.id))));
   }
 
   peek(addr) {
@@ -265,6 +296,7 @@ export default class Agents extends View {
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
+    if (props()?.agentMenu) return this.agentMenu(t, props().agentMenu);
     const cols = { ...(shared("space.colors") ?? {}) };
     const named = Object.keys(cols).filter((k) => !cols[k].startsWith("#"));
     for (const k of named) {
@@ -281,8 +313,9 @@ export default class Agents extends View {
     const shown = focused()?.agent;
     const now = Date.now();
     this.track(list, now);
-    this.awake = this.asleep = false;
-    this.snore = snoreAt(now);
+    this.awake = false;
+    this.sleepers = [];
+    this.snore = new Map(PETS.map((p) => [p.id, snoreAt(now, p)]));
     const step = this.step = Math.floor(now / BEAT) % FRAMES;
     // A kept sub-agent (one with a pane) is in agents() too: where a tree shows
     // it, it gets no row of its own, unless it's pinned.
@@ -399,9 +432,10 @@ export default class Agents extends View {
       const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
       // Witch card: dozing while the agent idles, casting while it works.
       const asleep = !LABEL[a.status] || a.status === "idle";
-      if (asleep) this.asleep = true; else this.awake = true;
+      const pet = petObj(a.address);
+      if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
       const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${petOf()}-${asleep ? `sleep-${this.snore}` : `${moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
@@ -424,6 +458,11 @@ export default class Agents extends View {
           cx.notify();
         })
         .on_click(() => run("pane.focus", { pane: a.pane }))
+        .on_mouse_down("right", (_e, cx) => {
+          cx.stop_propagation();
+          openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } });
+        })
+        .tooltip("Right-click: this agent's witch and move")
         .child(div().id(`agent-fold-${a.address}`)
           .when(subs.length > 0, el => el.on_click((_e, cx) => {
             cx.stop_propagation();

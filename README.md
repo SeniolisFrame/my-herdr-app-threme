@@ -31,7 +31,7 @@ while the agent works or needs you; dozing while it idles. Two witches, picked u
 black witch in a hooded cloak with a branch staff (the default; dozes on her feet) and the blue witch with a crystal
 staff (dozes on the ground). Both have 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
 twirl; violet magic for the black witch, icy blue for the blue one), picked under Move in the same menu; Random, the
-default, gives each agent its own. Each card is named
+default, gives each agent its own. Right-click a card to give that agent its own witch and move ("As all" goes back). Each card is named
 after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
