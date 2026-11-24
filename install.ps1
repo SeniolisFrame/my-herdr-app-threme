@@ -23,7 +23,7 @@ if (-not (Test-Path $text) -or [IO.File]::ReadAllText($text) -eq [IO.File]::Read
 else { Write-Host "my-herdr-text.json exists: set the sizes from $PSScriptRoot\my-herdr-text.json by hand." }
 # The witch's sleeping frames (the casting ones are in mods/kage-agents). The bat is gone: drop an older install's.
 Copy-Item (Join-Path $PSScriptRoot "avatars\witch-*.png") $mod -Force
-Remove-Item (Join-Path $mod "bat-*.svg"), (Join-Path $mod "witch-awake*.png"), (Join-Path $mod "witch-icon.png"), (Join-Path $mod "witch-*.svg") -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $mod "bat-*.svg"), (Join-Path $mod "witch-awake*.png"), (Join-Path $mod "witch-icon.png"), (Join-Path $mod "witch-*.svg"), (Join-Path $mod "witch-sleep.png"), (Join-Path $mod "witch-black-sleep.png") -ErrorAction SilentlyContinue
 # Left for installers that rewrite a layout (my-herdr-app's): they run it after, kage stays.
 $hooks = Join-Path $app "after-layout"
 New-Item -ItemType Directory -Force $hooks | Out-Null

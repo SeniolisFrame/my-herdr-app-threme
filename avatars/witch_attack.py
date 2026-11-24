@@ -1,10 +1,12 @@
 # Makes the Agents card art from the Pixellab frames in avatars/pixellab/, 96x96, drawn 1:1, for each witch
 # (picked in the Agents menu):
-#   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*, sleep frames 1..3; 0 stands)
-#   witch-black  black hooded cloak and branch staff (witch_black_*, sleep frames 2..4; 0-1 still nod off)
-# Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep, -1, -2.png
+#   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*; asleep: nod_0..7, sitting and nodding)
+#   witch-black  black hooded cloak and branch staff (witch_black_*; asleep: sleep_2..4, eyes shut; 0-1 still nod off)
+# Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep-0..n.png
 # (asleep), and <id>-<move>-0..8.png for her six other moves (<src>_<move>_*). One crop and one scale (nearest) per
 # witch so she is the same size in every frame; skin is paled.
+# Hand-edited sources, keep them: witch_front_nod_* are Pixellab's dozing frames with the head moved down 0-3px; the
+# *_circle_* rings were mirrored round the middle of her boots (Pixellab drew them off to the right).
 #   python avatars/witch_attack.py
 import os, colorsys
 from PIL import Image
@@ -26,7 +28,7 @@ def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, 
 MOVES = ["strike", "fireball", "circle", "lightning", "hand", "twirl"]
 load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA"))
 
-for id, src, sleeps in [("witch", "witch_front", [1, 2, 3]), ("witch-black", "witch_black", [2, 3, 4])]:
+for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)]), ("witch-black", "witch_black", ["sleep_2", "sleep_3", "sleep_4"])]:
     fr = [load(f"{src}_attack_{i}.png") for i in range(9)]
     bb = [f.getbbox() for f in fr]
     box = [min(b[0] for b in bb), min(b[1] for b in bb), max(b[2] for b in bb), max(b[3] for b in bb)]
@@ -38,8 +40,8 @@ for id, src, sleeps in [("witch", "witch_front", [1, 2, 3]), ("witch-black", "wi
         return out
     for i, f in enumerate(fr):
         fit(f).save(os.path.join(OUT, f"{id}-atk-{i}.png"))
-    for n, i in zip(["sleep", "sleep-1", "sleep-2"], sleeps):
-        fit(load(f"{src}_sleep_{i}.png")).save(os.path.join(HERE, f"{id}-{n}.png"))
+    for k, n in enumerate(sleeps):
+        fit(load(f"{src}_{n}.png")).save(os.path.join(HERE, f"{id}-sleep-{k}.png"))
     print(id, w, h, s)
     # Her other moves (<src>_<move>_0..8, picked in the Agents menu): the cast's scale and place, so she stays the
     # same size; effects reaching past the card are cut off at its edge.
