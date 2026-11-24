@@ -67,7 +67,20 @@ const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[
 // The card's witch, picked in the sort popup: <id>-atk-0..8.png while the agent works, <id>-sleep*.png while it idles.
 // The art is drawn at this size (avatars/witch_attack.py), so it is shown 1:1.
 const PETS = [{ id: "witch", label: "Blue witch" }, { id: "witch-black", label: "Black witch" }];
-const petOf = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "witch";
+const petOf = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "witch-black";
+// Each witch's moves while an agent works (<pet>-<id>-0..8.png; the cast is atk). "random" gives each agent one of
+// them, the same one every time (by its address).
+const MOVES = [
+  { id: "atk", label: "Cast" }, { id: "strike", label: "Staff strike" }, { id: "fireball", label: "Fireball" },
+  { id: "circle", label: "Magic circle" }, { id: "lightning", label: "Lightning" }, { id: "hand", label: "Hand spell" },
+  { id: "twirl", label: "Staff twirl" },
+];
+const moveSetting = () => MOVES.find((m) => m.id === shared("agents.move"))?.id ?? "random";
+const hash = (s) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261); // FNV-1a
+const moveOf = (address) => {
+  const m = moveSetting();
+  return m === "random" ? MOVES[hash(String(address)) % MOVES.length].id : m;
+};
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
@@ -185,7 +198,12 @@ export default class Agents extends View {
         s.id === sortOf().id, () => setShared("agents.sort", s.id))))
       .child(head("Avatar", 8))
       .children(PETS.map((p) => row(`pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep.png`).w(18).h(18).flex_none(),
-        p.id === petOf(), () => setShared("agents.pet", p.id))));
+        p.id === petOf(), () => setShared("agents.pet", p.id))))
+      .child(head("Move", 8))
+      .child(row("move-random", "Random", div().w(18).flex_none().text_color(t.muted).child("?"), moveSetting() === "random",
+        () => setShared("agents.move", "random")))
+      .children(MOVES.map((m) => row(`move-${m.id}`, m.label, image(`mods/kage-agents/${petOf()}-${m.id}-4.png`).w(18).h(18).flex_none(),
+        m.id === moveSetting(), () => setShared("agents.move", m.id))));
   }
 
   peek(addr) {
@@ -380,7 +398,7 @@ export default class Agents extends View {
       const asleep = !LABEL[a.status] || a.status === "idle";
       if (asleep) this.asleep = true; else this.awake = true;
       const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : `atk-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+        .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : `${moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
@@ -483,8 +501,8 @@ export default class Agents extends View {
                 .text_size(11)
                 .text_color(t.dim)
                 .hover((s) => s.text_color(t.foreground))
-                .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 220, props: { sortMenu: true } }))
-                .tooltip(`Sort agents: ${sort.label}; avatar`)
+                .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } }))
+                .tooltip(`Sort agents: ${sort.label}; avatar, move`)
                 .child(svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14)),
             ),
         ),

@@ -3,7 +3,8 @@
 #   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*, sleep frames 1..3; 0 stands)
 #   witch-black  black hooded cloak and branch staff (witch_black_*, sleep frames 2..4; 0-1 still nod off)
 # Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep, -1, -2.png
-# (asleep). One crop and one scale (nearest) per witch so she is the same size in every frame; skin is paled.
+# (asleep), and <id>-<move>-0..8.png for her six other moves (<src>_<move>_*). One crop and one scale (nearest) per
+# witch so she is the same size in every frame; skin is paled.
 #   python avatars/witch_attack.py
 import os, colorsys
 from PIL import Image
@@ -22,6 +23,7 @@ def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, 
             r, g, b = colorsys.hls_to_rgb(0.055, min(l + (1 - l) * 0.55, 0.97), s * 0.45)
             px[x, y] = (round(r * 255), round(g * 255), round(b * 255), a)
     return im
+MOVES = ["strike", "fireball", "circle", "lightning", "hand", "twirl"]
 load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA"))
 
 for id, src, sleeps in [("witch", "witch_front", [1, 2, 3]), ("witch-black", "witch_black", [2, 3, 4])]:
@@ -39,3 +41,12 @@ for id, src, sleeps in [("witch", "witch_front", [1, 2, 3]), ("witch-black", "wi
     for n, i in zip(["sleep", "sleep-1", "sleep-2"], sleeps):
         fit(load(f"{src}_sleep_{i}.png")).save(os.path.join(HERE, f"{id}-{n}.png"))
     print(id, w, h, s)
+    # Her other moves (<src>_<move>_0..8, picked in the Agents menu): the cast's scale and place, so she stays the
+    # same size; effects reaching past the card are cut off at its edge.
+    x0, y0 = (S - round(w * s)) // 2, S - 2 - round(h * s)
+    for move in MOVES:
+        for i in range(9):
+            f = load(f"{src}_{move}_{i}.png")
+            big = f.resize((round(f.width * s), round(f.height * s)), Image.NEAREST)
+            out = Image.new("RGBA", (S, S)); out.alpha_composite(big, (x0 - round(box[0] * s), y0 - round(box[1] * s)))
+            out.save(os.path.join(OUT, f"{id}-{move}-{i}.png"))

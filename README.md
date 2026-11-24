@@ -28,8 +28,10 @@ Text colors keep at least 4.5:1 contrast on the backgrounds.
 
 A copy of herdr's Agents list where each agent is a card with a pixel-art witch (Pixellab): casting a spell, facing you,
 while the agent works or needs you; dozing while it idles. Two witches, picked under Avatar in the sort menu: the
-blue witch with a crystal staff (dozes on the ground) and the black witch in a hooded cloak with a branch staff (dozes
-on her feet). Each card is named
+black witch in a hooded cloak with a branch staff (the default; dozes on her feet) and the blue witch with a crystal
+staff (dozes on the ground). Both have 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
+twirl; violet magic for the black witch, icy blue for the blue one), picked under Move in the same menu; Random, the
+default, gives each agent its own. Each card is named
 after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
