@@ -298,8 +298,8 @@ export default class Agents extends View {
   }
 
   // props.board (my-herdr-app's top band, through kage-layout.ps1): the same witch cards in four
-  // columns by status (no status counts as idle), newest change first. Next / previous agent keep the
-  // list's order: the sidebar sets it too, and two orders would take turns.
+  // columns by status (no status counts as idle), newest change first. It sets no agent order:
+  // next / previous follow the sidebar's.
   board(t, list, row) {
     const cols = BOARD.map(([status, label]) => ({ status, label, members: list.filter((a) => (LABEL[a.status] ? a.status : "idle") === status).sort((x, y) => this.since(y) - this.since(x)) }));
     return h_flex().size_full().min_h(0).bg(t.chrome).px(10).pt(4).gap(10).text_size(13)
@@ -324,7 +324,8 @@ export default class Agents extends View {
       cols[k] = KAGE_SPACE.reduce((best, c) => (uses(c) < uses(best) ? c : best));
     }
     if (named.length) setShared("space.colors", cols);
-    const collapsed = narrow();
+    // The board is wide whatever the sidebar's width: always full cards.
+    const board = Boolean(props()?.board), collapsed = !board && narrow();
     const sort = sortOf();
     let list = agents();
     this.listed = new Map(list.map((a) => [a.address, a.status]));
@@ -339,7 +340,8 @@ export default class Agents extends View {
     const step = this.step = Math.floor(now / BEAT) % FRAMES;
     // A kept sub-agent (one with a pane) is in agents() too: where a tree shows
     // it, it gets no row of its own, unless it's pinned.
-    const nested = new Set(collapsed ? [] : list.flatMap((a) => this.tree(all, a.address).map((s) => s.t.address)));
+    // The board has no sub-rows, so there a kept sub-agent gets a card of its own.
+    const nested = new Set(collapsed || board ? [] : list.flatMap((a) => this.tree(all, a.address).map((s) => s.t.address)));
     list = list.filter((a) => a.pinned || !nested.has(a.address));
     const tabCounts = new Map();
     for (const a of list) tabCounts.set(a.tab, (tabCounts.get(a.tab) ?? 0) + 1);
@@ -350,7 +352,8 @@ export default class Agents extends View {
     const pinned = list.filter((a) => a.pinned);
     const rest = list.filter((a) => !a.pinned);
     list = [...pinned, ...rest];
-    setAgentOrder(list.map((a) => a.address));
+    // The sidebar owns next / previous agent; the board's list (kept sub-agents too) would take turns with it.
+    if (!board) setAgentOrder(list.map((a) => a.address));
 
     const withKids = (a, i) => {
       const subs = collapsed ? [] : this.tree(all, a.address);
@@ -497,7 +500,7 @@ export default class Agents extends View {
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));
     };
-    if (props()?.board) return this.board(t, list, row);
+    if (board) return this.board(t, list, row);
 
     // Groups in list order: spaces (grouped) or priority sections. Agents of a
     // space are next to each other in agents(), so neighbours make a group.
