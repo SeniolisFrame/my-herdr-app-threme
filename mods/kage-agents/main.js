@@ -64,8 +64,10 @@ const SORTS = [
   { id: "grouped", label: "Grouped by space", icon: "layers" },
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
-// The card's witch: witch-atk-0..8.png while the agent works, witch-sleep*.png while it idles. The art is drawn at this
-// size (avatars/witch_attack.py), so it is shown 1:1.
+// The card's witch, picked in the sort popup: <id>-atk-0..8.png while the agent works, <id>-sleep*.png while it idles.
+// The art is drawn at this size (avatars/witch_attack.py), so it is shown 1:1.
+const PETS = [{ id: "witch", label: "Blue witch" }, { id: "witch-black", label: "Black witch" }];
+const petOf = () => PETS.find((p) => p.id === shared("agents.pet"))?.id ?? "witch";
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
@@ -180,7 +182,10 @@ export default class Agents extends View {
       .text_size(12.8)
       .child(head("Sort agents", 4))
       .children(SORTS.map((s) => row(`sort-${s.id}`, s.label, svg(`mods/workspace-chrome/${s.icon}.svg`).size(14).flex_none().text_color(t.muted),
-        s.id === sortOf().id, () => setShared("agents.sort", s.id))));
+        s.id === sortOf().id, () => setShared("agents.sort", s.id))))
+      .child(head("Avatar", 8))
+      .children(PETS.map((p) => row(`pet-${p.id}`, p.label, image(`mods/kage-agents/${p.id}-sleep.png`).w(18).h(18).flex_none(),
+        p.id === petOf(), () => setShared("agents.pet", p.id))));
   }
 
   peek(addr) {
@@ -375,7 +380,7 @@ export default class Agents extends View {
       const asleep = !LABEL[a.status] || a.status === "idle";
       if (asleep) this.asleep = true; else this.awake = true;
       const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/witch-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : `atk-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+        .child(image(`mods/kage-agents/${petOf()}-${asleep ? ["sleep", "sleep-1", "sleep-2"][this.snore] : `atk-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()

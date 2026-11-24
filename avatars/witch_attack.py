@@ -1,12 +1,15 @@
-# Makes the Agents card art from the Pixellab frames in avatars/pixellab/ (front-facing witch2), 96x96, drawn 1:1:
-#   mods/kage-agents/witch-atk-0..8.png  the cast, while an agent works
-#   avatars/witch-sleep, -1, -2.png      asleep (sleep frames 1..3; frame 0 stands)
-# All use one crop and one scale (nearest) so she is the same size in every frame; skin is paled.
+# Makes the Agents card art from the Pixellab frames in avatars/pixellab/, 96x96, drawn 1:1, for each witch
+# (picked in the Agents menu):
+#   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*, sleep frames 1..3; 0 stands)
+#   witch-black  black hooded cloak and branch staff (witch_black_*, sleep frames 2..4; 0-1 still nod off)
+# Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep, -1, -2.png
+# (asleep). One crop and one scale (nearest) per witch so she is the same size in every frame; skin is paled.
 #   python avatars/witch_attack.py
 import os, colorsys
 from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "mods", "kage-agents")
+S = 96
 
 def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, cloak and gold are left alone
     im = im.copy(); px = im.load()
@@ -20,20 +23,19 @@ def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, 
             px[x, y] = (round(r * 255), round(g * 255), round(b * 255), a)
     return im
 load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA"))
-fr = [load(f"witch_front_attack_{i}.png") for i in range(9)]
-box = [min(b[0] for b in map(lambda f: f.getbbox(), fr)), min(b[1] for b in map(lambda f: f.getbbox(), fr)),
-       max(b[2] for b in map(lambda f: f.getbbox(), fr)), max(b[3] for b in map(lambda f: f.getbbox(), fr))]
-w, h = box[2] - box[0], box[3] - box[1]
-S = 96
-s = min((S - 4) / w, (S - 4) / h)
-for i, f in enumerate(fr):
-    c = f.crop(box).resize((round(w * s), round(h * s)), Image.NEAREST)
-    out = Image.new("RGBA", (S, S)); out.paste(c, ((S - c.width) // 2, S - 2 - c.height), c)
-    out.save(os.path.join(OUT, f"witch-atk-{i}.png"))
-print(w, h, s)
 
-for n, i in zip(["sleep", "sleep-1", "sleep-2"], [1, 2, 3]):
-    f = load(f"witch_front_sleep_{i}.png")
-    c = f.crop(box).resize((round(w * s), round(h * s)), Image.NEAREST)
-    out = Image.new("RGBA", (S, S)); out.paste(c, ((S - c.width) // 2, S - 2 - c.height), c)
-    out.save(os.path.join(HERE, f"witch-{n}.png"))
+for id, src, sleeps in [("witch", "witch_front", [1, 2, 3]), ("witch-black", "witch_black", [2, 3, 4])]:
+    fr = [load(f"{src}_attack_{i}.png") for i in range(9)]
+    bb = [f.getbbox() for f in fr]
+    box = [min(b[0] for b in bb), min(b[1] for b in bb), max(b[2] for b in bb), max(b[3] for b in bb)]
+    w, h = box[2] - box[0], box[3] - box[1]
+    s = min((S - 4) / w, (S - 4) / h)
+    def fit(f):
+        c = f.crop(box).resize((round(w * s), round(h * s)), Image.NEAREST)
+        out = Image.new("RGBA", (S, S)); out.paste(c, ((S - c.width) // 2, S - 2 - c.height), c)
+        return out
+    for i, f in enumerate(fr):
+        fit(f).save(os.path.join(OUT, f"{id}-atk-{i}.png"))
+    for n, i in zip(["sleep", "sleep-1", "sleep-2"], sleeps):
+        fit(load(f"{src}_sleep_{i}.png")).save(os.path.join(HERE, f"{id}-{n}.png"))
+    print(id, w, h, s)
