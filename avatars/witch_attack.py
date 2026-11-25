@@ -37,17 +37,22 @@ for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)])
     s = H / (bb[0][3] - bb[0][1])
     x0 = S // 2 - round((bb[0][0] + bb[0][2]) / 2 * s)
     y0 = S - 2 - round(bb[0][3] * s)
-    def fit(f, dy=0):
+    def fit(f, dx=0, dy=0):
         big = f.resize((round(f.width * s), round(f.height * s)), Image.NEAREST)
-        out = Image.new("RGBA", (S, S)); out.alpha_composite(big, (x0, y0 - dy))
+        out = Image.new("RGBA", (S, S)); out.alpha_composite(big, (x0 + dx, y0 - dy))
         return out
     for i, f in enumerate(fr):
         fit(f).save(os.path.join(OUT, f"{id}-atk-{i}.png"))
     zz = [load(f"{src}_{n}.png") for n in sleeps]
-    # Asleep on the ground she lies lower than her feet: lift the whole loop so it stays 2px off the bottom.
-    lift = max(0, y0 + max(round(z.getbbox()[3] * s) for z in zz) - (S - 2))
+    # Asleep she can lie lower and wider than she stands: centre the loop on her body (the mean x of her pixels, so a
+    # long thin staff hardly counts) as far as the card's edges allow, and lift it 2px off the bottom.
+    zb = [z.getbbox() for z in zz]
+    xs = [i % z.width for z in zz for i, a in enumerate(z.getchannel("A").tobytes()) if a > 10]
+    left, right = -x0 - round(min(b[0] for b in zb) * s), S - x0 - round(max(b[2] for b in zb) * s)  # shifts to the edges
+    shift = min(max(S // 2 - round(sum(xs) / len(xs) * s) - x0, left), right)
+    lift = max(0, y0 + round(max(b[3] for b in zb) * s) - (S - 2))
     for k, z in enumerate(zz):
-        fit(z, lift).save(os.path.join(HERE, f"{id}-sleep-{k}.png"))
+        fit(z, shift, lift).save(os.path.join(HERE, f"{id}-sleep-{k}.png"))
     for move in MOVES:  # her other moves (<src>_<move>_0..8), same scale and place
         for i in range(9):
             fit(load(f"{src}_{move}_{i}.png")).save(os.path.join(OUT, f"{id}-{move}-{i}.png"))
