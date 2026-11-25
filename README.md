@@ -37,7 +37,21 @@ it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
 teal/orange/blue.
 
-`python avatars/witch_attack.py` fits the Pixellab frames in `avatars/pixellab/` into the 96px card art.
+| | black | blue |
+|---|---|---|
+| cast | ![](docs/gifs/witch-black-cast.gif) | ![](docs/gifs/witch-cast.gif) |
+| strike | ![](docs/gifs/witch-black-strike.gif) | ![](docs/gifs/witch-strike.gif) |
+| fireball | ![](docs/gifs/witch-black-fireball.gif) | ![](docs/gifs/witch-fireball.gif) |
+| circle | ![](docs/gifs/witch-black-circle.gif) | ![](docs/gifs/witch-circle.gif) |
+| lightning | ![](docs/gifs/witch-black-lightning.gif) | ![](docs/gifs/witch-lightning.gif) |
+| hand | ![](docs/gifs/witch-black-hand.gif) | ![](docs/gifs/witch-hand.gif) |
+| twirl | ![](docs/gifs/witch-black-twirl.gif) | ![](docs/gifs/witch-twirl.gif) |
+| done | ![](docs/gifs/witch-black-done.gif) | ![](docs/gifs/witch-done.gif) |
+| plead | ![](docs/gifs/witch-black-plead.gif) | ![](docs/gifs/witch-plead.gif) |
+| sleep | ![](docs/gifs/witch-black-sleep.gif) | ![](docs/gifs/witch-sleep.gif) |
+
+`python avatars/witch_attack.py` fits the Pixellab frames in `avatars/pixellab/` into the 96px card art;
+`python avatars/make_gifs.py` then remakes the GIFs above.
 
 ## 8-bit spaces (mods/kage-spaces)
 

@@ -57,6 +57,8 @@ then decide - don't animate a look the user hasn't approved.
 - `mods/kage-agents/main.js`: add `{ id: "<pet-id>", label: "...", sleep: <n frames>, ms: <ms per sleep frame> }` to `PETS`.
 - `python avatars/witch_attack.py`, then check a contact sheet of `mods/kage-agents/<pet-id>-*-0..8.png` (all 96x96, same
   size in every move), `node --input-type=module --check < mods/kage-agents/main.js`, and `README.md` (Witch cards).
+- `avatars/make_gifs.py`: add `("<pet-id>", <ms per sleep frame>)` to its pet list, run it, and add a `<pet-id>` column
+  to the GIF table in `README.md` (Witch cards).
 - `.\install.ps1` (PowerShell, herdr-app running), then the user restarts herdr-app. Pick it under Avatar in the sort
   menu or by right-clicking a card.
 
