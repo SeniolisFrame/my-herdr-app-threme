@@ -8,8 +8,10 @@
 # and its font / ui_font win over settings.json (terminals and my-herdr-app's Files and Changes follow).
 param([string]$file)
 
-# Every tab block's pane frame gets that radius, its border and focus that width, and that veil (none: no veil).
-function Set-PaneFrame([string]$json, $radius, $width, $veil) {
+# Every tab block's pane frame gets that radius, its border and focus that width, that veil (none: no veil),
+# and $focus = (from, to) swaps its focus colour only where it is "from": install's ("accent", "border") keeps the
+# pane you click from lighting up, uninstall's ("border", "accent") undoes it; a colour of the layout's own stays.
+function Set-PaneFrame([string]$json, $radius, $width, $veil, $focus) {
   $root = $json | ConvertFrom-Json
   $walk = {
     param($n)
@@ -18,7 +20,7 @@ function Set-PaneFrame([string]$json, $radius, $width, $veil) {
       $f | Add-Member -Force radius $radius
       if ($null -ne $veil) { $f | Add-Member -Force veil $veil } else { $f.PSObject.Properties.Remove("veil") }
       if ($f.border) { $f.border | Add-Member -Force width $width }
-      if ($f.focus) { $f.focus | Add-Member -Force width $width }
+      if ($f.focus) { $f.focus | Add-Member -Force width $width; if ($focus -and $f.focus.color -eq $focus[0]) { $f.focus.color = $focus[1] } }
     }
     foreach ($c in @($n.children)) { if ($c) { & $walk $c } }
   }
@@ -63,6 +65,6 @@ if ($file) {
   # my-herdr-app's board (its top band) becomes the witch cards in columns.
   $new = $json -replace '("mod":\s*)"my-board"', '$1"kage-agents", "props": { "board": true }'
   $new = $new -replace '("mod":\s*)"agents"', '$1"kage-agents"' -replace '("mod":\s*)"spaces"', '$1"kage-spaces"' -replace '("mod":\s*)"tabs"', '$1"kage-tabs"' -replace '("mod":\s*)"pane"', '$1"kage-pane"'
-  $new = Set-BoardFixed (Set-LayoutFont (Set-PaneFrame $new 0 2 0.35) "Unifont")
+  $new = Set-BoardFixed (Set-LayoutFont (Set-PaneFrame $new 0 2 0.35 ("accent", "border")) "Unifont")
   if ($new -ne $json) { [IO.File]::WriteAllText($file, $new) }
 }

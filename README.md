@@ -31,7 +31,7 @@ while the agent works or needs you; dozing while it idles. Two witches, picked u
 black witch in a hooded cloak with a branch staff (the default; dozes on her feet) and the blue witch with a crystal
 staff (dozes on the ground). Both have 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
 twirl; violet magic for the black witch, icy blue for the blue one), picked under Move in the same menu; Random, the
-default, draws a new one for each agent whenever its state changes. Right-click a card to give that agent its own witch and move ("As all" goes back). Whatever the move, a DONE agent's witch cheers (hand up, a jump) and a NEEDS YOU one clasps her hands and pleads. With my-herdr-app, install turns its top board into the open space's forest camp (a fixed 240px band, a camp of its own for each space): a campfire with that space's witches round it, asleep while their agent idles, casting while it works. That layout's sidebar (the Spaces list, Settings) is hidden: the top bar lists the spaces and has a Settings button. Uninstall gives the board and sidebar back. Each card is named
+default, draws a new one for each agent whenever its state changes. Right-click a card to give that agent its own witch and move ("As all" goes back). Whatever the move, a DONE agent's witch cheers (hand up, a jump) and a NEEDS YOU one clasps her hands and pleads. With my-herdr-app, install turns its top board into the open space's forest camp (a fixed 240px band, a camp of its own for each space): a campfire with that space's witches round it, asleep while their agent idles, casting while it works, with a speech bubble over a working Claude Code's witch chanting a spell for the step it's on (its newest `●` line, read every 3s): Perspicio! reading, Transmuto! changing a file, Ignis! running a command, Inquiro! searching, Veni, familiaris! a helper agent, another spell for its own words. That layout's sidebar (the Spaces list, Settings) is hidden: the top bar lists the spaces and has a Settings button. Uninstall gives the board and sidebar back. Each card is named
 after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
@@ -73,8 +73,8 @@ the board. Show the sidebar again and the tabs come back. A Settings button sits
 
 ## 8-bit pane frames (mods/kage-pane)
 
-Each terminal pane (PowerShell, Claude Code, ...) gets square corners and a 2px border, violet
-while it has the keyboard, and a header in the same pixel font: program, title, folder,
+Each terminal pane (PowerShell, Claude Code, ...) gets square corners and a 2px border that stays
+the same when it has the keyboard (the other panes fade instead), and a header in the same pixel font: program, title, folder,
 the agent's status, and split/zoom/close buttons on hover.
 
 ## Install
@@ -84,7 +84,7 @@ your current layout at the kage mods, with square 2px pane frames. Herdr's own l
 win98) are read-only: clone one first (`herdr-app do layout.clone`), then run it again.
 It also leaves `kage-layout.ps1` in herdr-app's `after-layout` folder: an installer that
 rewrites a layout (my-herdr-app's does) runs it afterwards, so kage stays without a second install. `.\kage-layout.test.ps1`
-checks it on a copy of herdr's main layout.
+checks it on a copy of herdr's main layout; `node saying.test.mjs` checks the board's speech bubble spells.
 It also writes `my-herdr-text.json` (16px text, 22px rows) so my-herdr-app's Files and Changes
 match the Unifont; restart herdr-app to apply it. An existing file of yours is left alone, and
 `uninstall.ps1` removes it only if it is still ours.
@@ -100,7 +100,7 @@ herdr-app do app.theme --name kage
 ```
 
 then set `"mod": "agents"` to `"kage-agents"` `"spaces"` to `"kage-spaces"` and `"tabs"` to `"kage-tabs"` in your layout (`$APP/layouts/<name>.json`); for the pane frames,
-`"pane"` to `"kage-pane"`, the pane frame's `radius` to 0 and its border and focus `width` to 2.
+`"pane"` to `"kage-pane"`, the pane frame's `radius` to 0 and its border and focus `width` to 2, the focus `color` to `"border"`.
 
 ## Uninstall
 

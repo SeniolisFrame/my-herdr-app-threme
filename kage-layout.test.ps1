@@ -14,6 +14,7 @@ $f = Find-Frame $root
 Assert ($f.radius -eq 0) "radius 0"
 Assert ($f.border.width -eq 2 -and $f.focus.width -eq 2) "border and focus 2px"
 Assert ($f.veil -eq 0.35) "other panes veiled"
+Assert ($f.focus.color -eq "border") "focused pane's border no brighter than the rest"
 Assert ($f.header.content.mod -eq "kage-pane") "header is kage-pane"
 Assert ($root.divider.width -eq 1) "window divider left alone"
 Assert ($root.font -eq "Unifont" -and $root.ui_font -eq "Unifont") "layout fonts are Unifont"
@@ -22,8 +23,8 @@ Assert ($after -match '"kage-agents"' -and $after -notmatch '"mod":\s*"agents"')
 & (Join-Path $PSScriptRoot "kage-layout.ps1") $tmp
 Assert ([IO.File]::ReadAllText($tmp) -eq $after) "running twice changes nothing"
 
-$f = Find-Frame (Set-PaneFrame $after 10 1 | ConvertFrom-Json)
-Assert ($f.radius -eq 10 -and $f.border.width -eq 1 -and $null -eq $f.veil) "Set-PaneFrame 10 1 restores, veil gone"
+$f = Find-Frame (Set-PaneFrame $after 10 1 $null ("border", "accent") | ConvertFrom-Json)
+Assert ($f.radius -eq 10 -and $f.border.width -eq 1 -and $null -eq $f.veil -and $f.focus.color -eq "accent") "uninstall's Set-PaneFrame restores herdr's frame"
 $r = Set-LayoutFont $after $null | ConvertFrom-Json
 Assert ($null -eq $r.font -and $null -eq $r.ui_font) "Set-LayoutFont null removes kage's fonts"
 $r = Set-LayoutFont '{"font":"Fira Code"}' $null | ConvertFrom-Json
@@ -33,6 +34,8 @@ Copy-Item (Join-Path $app "layouts\win98.json") $tmp -Force
 & (Join-Path $PSScriptRoot "kage-layout.ps1") $tmp
 $r = Set-LayoutFont ([IO.File]::ReadAllText($tmp)) $null | ConvertFrom-Json
 Assert ($r.font -eq "PxPlus IBM VGA 8x16" -and $r.ui_font -eq "Pixelated MS Sans Serif") "win98's own fonts survive install and uninstall"
+$f = Find-Frame (Set-PaneFrame ([IO.File]::ReadAllText($tmp)) 10 1 $null ("border", "accent") | ConvertFrom-Json)
+Assert ($f.focus.color -eq "#c0c0c0") "win98's own focus colour survives install and uninstall"
 Remove-Item $tmp
 
 # my-herdr-app's board block becomes the witch board, once; uninstall.ps1's pattern turns it back.

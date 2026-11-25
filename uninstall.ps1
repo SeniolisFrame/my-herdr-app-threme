@@ -24,8 +24,8 @@ Get-ChildItem (Join-Path $app "layouts") -Filter *.json | ForEach-Object {
   $new = $json -replace '("mod":\s*)"kage-agents",\s*"props":\s*\{\s*"board":\s*true\s*\}', '$1"my-board"'
   if ($new -ne $json) { $new = Set-BoardFixed $new -Free }
   $new = $new -replace '("mod":\s*)"kage-agents"', '$1"agents"' -replace '("mod":\s*)"kage-spaces"', '$1"spaces"' -replace '("mod":\s*)"kage-tabs"', '$1"tabs"'
-  # Pane frames back to herdr's own (as in its main layout): rounded 10, 1px border.
-  if ($new -match '"kage-pane"') { $new = Set-PaneFrame ($new -replace '("mod":\s*)"kage-pane"', '$1"pane"') 10 1 }
+  # Pane frames back to herdr's own (as in its main layout): rounded 10, 1px border, accent focus.
+  if ($new -match '"kage-pane"') { $new = Set-PaneFrame ($new -replace '("mod":\s*)"kage-pane"', '$1"pane"') 10 1 $null ("border", "accent") }
   # Apart from the frames: a layout without a pane header (terminals) got the fonts too.
   if ($new -match '"(ui_)?font":\s*"Unifont"') { $new = Set-LayoutFont $new $null }
   if ($new -ne $json) { [IO.File]::WriteAllText($_.FullName, $new); Write-Host "Layout $($_.BaseName): Agents, Spaces, tab bar, pane frames and fonts restored." }

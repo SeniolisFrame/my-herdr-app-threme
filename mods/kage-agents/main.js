@@ -2,7 +2,9 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout } from "herdr";
+import { agents, terminals, panes, focused, spaces, run, hc, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout } from "herdr";
+
+import { saying } from "./saying.js";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -162,6 +164,9 @@ export default class Agents extends View {
     this.sleepers = []; // the witches asleep on a card now, each stepping on her own clock
     this.snore = new Map();
     cx.timer.every(30000, (cx) => cx.notify());
+    // The board reads each working agent's screen every 3s for its speech bubble.
+    this.says = new Map();
+    if (props()?.board) cx.timer.every(3000, (cx) => this.listen(cx));
     // The awake witch changes frame 8 times a second; asleep, every 250 or 750ms. No cards, no redraws.
     // Checked twice per step and redrawn only when the step changes, so a late tick can't skip one.
     cx.timer.every(BEAT, (cx) => {
@@ -215,6 +220,22 @@ export default class Agents extends View {
 
   since(a) {
     return this.changed[a.address]?.at ?? 0;
+  }
+
+  // Only the open spaces' working agents; one that stops loses its bubble.
+  listen(cx) {
+    const open = new Set(spaces().filter((sp) => sp.active).map((sp) => sp.id));
+    const working = agents().filter((a) => a.status === "working" && open.has(a.space)).map((a) => a.address);
+    // One round at a time: a slow read (another machine over ssh) skips ticks instead of piling up.
+    if (this.reading || (!working.length && !this.says.size)) return;
+    this.reading = true;
+    cx.spawn(async (cx) => {
+      try {
+        const heard = await Promise.all(working.map((k) => hc(["read", k]).then((r) => [k, r.code === 0 ? saying(r.stdout) : null], () => [k, null])));
+        const says = new Map(heard.filter(([, s]) => s));
+        if ([...says].some(([k, s]) => this.says.get(k) !== s) || says.size !== this.says.size) { this.says = says; cx.notify(); }
+      } finally { this.reading = false; }
+    });
   }
 
   rank(a) {
@@ -325,6 +346,8 @@ export default class Agents extends View {
         .on_click(() => run("pane.focus", { pane: a.pane }))
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } }); })
         .tooltip(`${name}: ${LABEL[a.status] ?? "IDLE"}`)
+        .when(a.status === "working" && this.says.has(a.address), (el) => el.child(div().max_w(160).mb(2).px(6).py(1)
+          .bg(t.background).border_2().border_color(t.foreground).text_color(t.foreground).child(this.says.get(a.address))))
         .child(div().max_w(160).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
         .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${snoreAt(now, pet)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).w(FACE).h(FACE));
     };
