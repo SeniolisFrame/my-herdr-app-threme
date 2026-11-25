@@ -1,0 +1,6 @@
+# written by herdr-app into every mod folder
+mods/*/*.d.ts
+mods/*/jsconfig.json
+# copies of shared/*.js that install.ps1 puts in each mod
+mods/*/common.js
+mods/*/size.js

@@ -1,12 +1,22 @@
-# Undoes install.ps1: the layout's Agents, Spaces and tab bar back to herdr's own, the theme back to
-# graphite, the kage theme and the kage-agents mod removed. Herdr keeps shared state in memory,
+# Undoes install.ps1: back to herdr's main layout and the graphite theme, the my-herdr layout, its
+# Files and Changes panels and the kage theme and mods removed; other layouts an older install
+# pointed at kage get herdr's Agents, Spaces, tab bar and frames back. Herdr keeps shared state in memory,
 # so the space tile colors can only be reset while it is closed: run this again then.
 $app = if ($env:HERDR_APP_HOME) { $env:HERDR_APP_HOME } else { Join-Path $HOME ".config\herdr-app" }
 if (-not (Test-Path $app)) { throw "herdr-app folder not found: $app" }
 . (Join-Path $PSScriptRoot "kage-layout.ps1")
-# No more kage after another installer rewrites a layout.
+# An older install's hook for my-herdr-app's installer.
 Remove-Item (Join-Path $app "after-layout\kage.ps1") -ErrorAction SilentlyContinue
 $status = try { & herdr-app status 2>$null | ConvertFrom-Json } catch { $null }
+
+# The my-herdr layout and its panels came with this repo: they go, back to herdr's main layout.
+if ($status) { & herdr-app do layout.switch --name main 2>&1 | Out-Null }
+Remove-Item (Join-Path $app "layouts\my-herdr.json") -ErrorAction SilentlyContinue
+foreach ($m in "my-files", "my-changes", "my-board") {
+  $item = Get-Item (Join-Path $app "mods\$m") -ErrorAction SilentlyContinue
+  if ($item.LinkType) { $item.Delete() } # a link: never recurse into the repo behind it
+  elseif ($item) { Remove-Item -Recurse -Force $item.FullName }
+}
 
 # programs.json goes only if it is still exactly ours (the person may have added entries).
 $programs = Join-Path $app "programs.json"

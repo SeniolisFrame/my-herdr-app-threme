@@ -1,11 +1,10 @@
 # kage's layout step: points a layout at the kage mods and gives its panes square 2px frames, the panes you're not in
 # faded (veil 0.35, herdr 0.1.18+).
 #   .\kage-layout.ps1 <layout.json>
-# install.ps1 runs it, and leaves a copy in herdr-app's after-layout folder: an installer that
-# rewrites a layout (my-herdr-app's) runs every script there with that layout's path, so kage
-# comes back by itself. Dot-sourced without a file (uninstall.ps1), it only defines the functions.
+# install.ps1 runs it on the my-herdr layout it copies. Dot-sourced without a file (uninstall.ps1),
+# it only defines the functions.
 # It also sets the layout's fonts to Unifont: a theme file can't carry fonts in herdr, a layout can,
-# and its font / ui_font win over settings.json (terminals and my-herdr-app's Files and Changes follow).
+# and its font / ui_font win over settings.json (terminals and the Files and Changes panels follow).
 param([string]$file)
 
 # Every tab block's pane frame gets that radius, its border and focus that width, that veil (none: no veil),
