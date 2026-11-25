@@ -62,7 +62,7 @@ export const actionsMethods = {
   // with lines chosen in that hunk, only those lines.
   applyHunk(n, cx) {
     const item = this.sel, unstage = item?.side === "staged";
-    if (!item) return;
+    if (!item || this.localOnly(cx)) return;
     const lines = this.chosenIn(n), shown = this.raw;
     this.act(unstage ? "Unstage" : "Stage", async () => {
       const patch = await this.patch(item, n, lines, unstage, shown);
@@ -75,7 +75,7 @@ export const actionsMethods = {
   // itself; what is staged stays. Asks twice.
   discardHunk(n, cx) {
     const item = this.sel;
-    if (item?.side !== "unstaged" || !this.raw) return;
+    if (item?.side !== "unstaged" || !this.raw || this.localOnly(cx)) return;
     if (this.confirm?.hunk !== n) { this.confirm = { hunk: n }; cx.notify(); return; }
     const lines = this.chosenIn(n), shown = this.raw;
     this.act("Discard", async () => {
@@ -86,6 +86,13 @@ export const actionsMethods = {
       await this.git(["-c", "core.autocrlf=false", "apply", "--recount", "-R", patch]);
       return `${lines.size ? `${lines.size} line${lines.size > 1 ? "s" : ""}` : "Hunk"} discarded`;
     }, cx);
+  },
+
+  // The patch file is written here (writeTextFile is local only): git on another machine can't read it.
+  localOnly(cx) {
+    if (!this.on) return false;
+    this.note = { text: "Hunk and line actions work on this computer only: stage the whole file", error: true }; cx.notify();
+    return true;
   },
 
   chosenIn(n) { return new Set([...this.chosen].filter((k) => k.startsWith(`${n}:`)).map((k) => Number(k.split(":")[1]))); },
