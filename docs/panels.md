@@ -8,7 +8,7 @@ How to use the panels the my-herdr layout puts around your terminal. Install: se
 
 - Click a folder to open it; double-click a file (or a search result) to edit it. An open file
   takes the whole window (the band on top, the chat and Changes hidden), the tree on its left:
-  double-click another file there to switch. A folder opened once (and the
+  click another file there to switch. A folder opened once (and the
   folders inside the one you open) shows at once next time. `ctrl+s` saves, `←` or `esc` closes it (it
   asks first when there are unsaved edits) and brings the panels back.
   Files keep their line endings (CRLF stays CRLF). When the open file changes on disk

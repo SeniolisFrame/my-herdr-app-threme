@@ -138,7 +138,8 @@ export default class Files extends View {
         .drag_paths([`${this.root}/${path}`], { on: this.on })
         .on_click((e, cx) => {
           if (entry.dir) this.toggle(path, cx);
-          else if (e.click_count < 2 || path === this.file) return; // a file: double-click, it takes the window
+          // A file: double-click opens it (it takes the window); with one open, a click switches to another.
+          else if ((e.click_count < 2 && !this.file) || path === this.file) return;
           else if (this.dirty()) { this.note = "Save or close the open file first"; cx.notify(); } // open() would drop the edits
           else this.open(path, null, cx);
         })
@@ -325,7 +326,7 @@ export default class Files extends View {
       .when(Boolean(replaceInBar), el => el.child(replaceInBar))
       .when(Boolean(confirm), el => el.child(confirm))
       .when(Boolean(this.note), el => el.child(div().px(12).py(4).text_size(sz("xs")).text_color(/^(Saved|Replaced|Created|Renamed|Deleted)/.test(this.note) ? t.ansi2 : this.note.endsWith("…") ? t.dim : t.ansi1).child(this.note)))
-      // An open file has the tree beside it, so another file is a double-click away.
+      // An open file has the tree beside it, so another file is a click away.
       .child(file ? h_flex().flex_1().min_h(0).w_full()
         .child(v_flex().w(280).flex_none().h_full().min_h(0).border_r(1).border_color(t.border).child(tree))
         .child(v_flex().flex_1().min_w(0).h_full().min_h(0).child(this.fileBody(t))) : results || tree)
