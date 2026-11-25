@@ -60,7 +60,7 @@ space's name in its own color (lightened to read on black, at least 5.9:1), a co
 the open one, no repo, branch or ahead/behind counts. Every kage mod uses [GNU Unifont](https://unifoundry.com/unifont/), SIL OFL 1.1
 (`mods/kage-spaces/fonts/LICENSE-Unifont.txt`). The file in that folder is trimmed to Latin, Thai,
 punctuation, arrows and box drawing (35KB); herdr loads fonts from a mod's `fonts/` folder at start.
-To use it in the terminal too, set `"font": "Unifont"` (and `"ui_font"` for other mods) in herdr-app's `settings.json`.
+The install sets the layout's `font` and `ui_font` to Unifont too, where it has none of its own (a theme file can't carry fonts in herdr, a layout can), so the terminal and other mods (my-herdr-app's Files and Changes) use it; uninstall.ps1 takes them off again.
 
 ## 8-bit tab bar (mods/kage-tabs)
 
