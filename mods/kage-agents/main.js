@@ -81,7 +81,7 @@ const petObj = (address) => PETS.find((p) => p.id === (picks()[address]?.pet ?? 
 const petOf = (address) => petObj(address).id;
 const snoreAt = (now, pet) => Math.floor(now / pet.ms) % pet.sleep;
 // Each witch's moves while an agent works (<pet>-<id>-0..8.png; the cast is atk). "random" gives each agent one of
-// them, the same one every time (by its address).
+// them, drawn again each time its state changes (by its address and when it changed).
 const MOVES = [
   { id: "atk", label: "Cast" }, { id: "strike", label: "Staff strike" }, { id: "fireball", label: "Fireball" },
   { id: "circle", label: "Magic circle" }, { id: "lightning", label: "Lightning" }, { id: "hand", label: "Hand spell" },
@@ -90,9 +90,9 @@ const MOVES = [
 const moveSetting = () => MOVES.find((m) => m.id === shared("agents.move"))?.id ?? "random";
 const ownMove = (address) => MOVES.find((m) => m.id === picks()[address]?.move)?.id;
 const hash = (s) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261); // FNV-1a
-const moveOf = (address) => {
+const moveOf = (address, since) => {
   const m = ownMove(address) ?? moveSetting();
-  return m === "random" ? MOVES[hash(String(address)) % MOVES.length].id : m;
+  return m === "random" ? MOVES[hash(`${address}@${since}`) % MOVES.length].id : m;
 };
 // DONE cheers (hand up, a jump) and NEEDS YOU pleads (hands clasped), whatever the move.
 const STATUS_MOVE = { done: "done", blocked: "plead" };
@@ -145,9 +145,13 @@ export default class Agents extends View {
   init(_props, cx) {
     if (props()?.sortMenu || props()?.agentMenu) return;
     this.folded = new Set();
-    // Each agent's last state and when it changed (ms), kept across restarts.
-    try { this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { this.changed = {}; }
-    if (!this.changed || typeof this.changed !== "object" || Array.isArray(this.changed)) this.changed = {};
+    // Each agent's last state and when it changed (ms), in the shared store (persisted), so the sidebar and the
+    // board stamp a change once and agree on it (the random move is drawn from it). Older installs kept it here.
+    if (!shared("agents.changed")) {
+      let saved; try { saved = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { saved = {}; }
+      setShared("agents.changed", saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {});
+      localStorage.removeItem("changed");
+    }
     try { this.pendingPins = JSON.parse(localStorage.getItem("pins") ?? "[]"); } catch { this.pendingPins = []; }
     if (!Array.isArray(this.pendingPins)) this.pendingPins = [];
     if (!this.pendingPins.length) localStorage.removeItem("pins");
@@ -166,18 +170,23 @@ export default class Agents extends View {
   // Stamps agents whose state changed. Done and idle count as one: looking at a
   // finished agent turns done into idle, and looking isn't the agent doing anything.
   track(list, now) {
+    const changed = { ...this.changed };
     let dirty = false;
     for (const a of list) {
       const s = a.status === "done" ? "idle" : a.status;
-      if (this.changed[a.address]?.s === s) continue;
-      this.changed[a.address] = { s, at: now };
+      if (changed[a.address]?.s === s) continue;
+      changed[a.address] = { s, at: now };
       dirty = true;
     }
     if (!dirty) return;
     // Gone and old: the list alone is empty right after a start.
     const listed = new Set(list.map((a) => a.address));
-    for (const [k, c] of Object.entries(this.changed)) if (!listed.has(k) && now - c.at > 30 * 86400000) delete this.changed[k];
-    localStorage.setItem("changed", JSON.stringify(this.changed));
+    for (const [k, c] of Object.entries(changed)) if (!listed.has(k) && now - c.at > 30 * 86400000) delete changed[k];
+    setShared("agents.changed", changed);
+  }
+
+  get changed() {
+    return shared("agents.changed") ?? {};
   }
 
   // Keep offline pins until their terminal returns, and keep each pending until
@@ -458,7 +467,7 @@ export default class Agents extends View {
       const pet = petObj(a.address);
       if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
       const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address)}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
