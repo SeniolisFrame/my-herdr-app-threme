@@ -115,7 +115,7 @@ make it taller.
   `origin`; **Push** doesn't send tags) and **Delete tag** (click twice; it deletes
   the tag here only, a pushed one stays on the remote).
 
-  ![History: the branch graph with branch, remote and tag labels, and the actions for a picked commit](history.png)
+  ![History: the branch graph in 2px pixels (curves where branches leave and merge, round commit dots) with branch, remote and tag labels](history.png)
 
 Both panels update when files change in the folder (and after their own actions);
 there is no timer. **Sync** reads everything again. Each workspace, and each tab in

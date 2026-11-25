@@ -6,7 +6,7 @@ The Files and Changes panels were the separate [my-herdr-app](https://github.com
 repo; they live here now (`mods/my-files`, `mods/my-changes`, `shared/`, `layouts/my-herdr.json`). How to use
 them: [docs/panels.md](docs/panels.md). Had my-herdr-app? Run its `uninstall.ps1` first, then install this.
 
-![Files on the left, Claude Code in the middle, Changes on the right](docs/overview.png)
+![The demo shop: a witch by the campfire on the forest board, Files on the left, Claude Code in the middle, three files waiting in Changes on the right](docs/overview.png)
 
 ## kage (影, shadow)
 
