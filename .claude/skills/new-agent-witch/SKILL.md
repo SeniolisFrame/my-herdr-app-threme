@@ -68,7 +68,7 @@ then decide - don't animate a look the user hasn't approved.
   character still; take the effect pixels (its hue, plus the white-hot core, that differ from the standing frame, rows
   below the feet), keep the half left of the boots' centre and mirror it. Measure the boots from the bottom rows right of
   the staff, not the whole bottom row (staff and cloak skew it). Skip frames with under ~30 effect pixels.
-- **Effects past the card:** moves keep the cast's scale and place, so big effects get cut at the 96px edge. That's
+- **Effects past the card:** moves keep the standing frame's scale (`H`) and centre, so big effects get cut at the 96px edge. That's
   intended - the character stays the same size in every move.
 - Note any hand-edited source in the header of `witch_attack.py` so a re-download doesn't silently undo it.
 - Status moves: every pet also needs `done` (cheer: hand up, a jump) and `plead` (hands clasped, begging face) - the DONE and

@@ -3,8 +3,8 @@
 #   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*; asleep: nod_0..7, sitting and nodding)
 #   witch-black  black hooded cloak and branch staff (witch_black_*; asleep: sleep_2..4, eyes shut; 0-1 still nod off)
 # Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep-0..n.png
-# (asleep), and <id>-<move>-0..8.png for her six other moves (<src>_<move>_*). One crop and one scale (nearest) per
-# witch so she is the same size in every frame; skin is paled.
+# (asleep), and <id>-<move>-0..8.png for her six other moves (<src>_<move>_*). One scale (nearest) per
+# witch, from her standing height, so every witch is the same size in every frame; skin is paled.
 # Hand-edited sources, keep them: witch_front_nod_* are Pixellab's dozing frames with the head moved down 0-3px; the
 # *_circle_* rings were mirrored round the middle of her boots (Pixellab drew them off to the right).
 #   python avatars/witch_attack.py
@@ -13,6 +13,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "mods", "kage-agents")
 S = 96
+H = 82  # a standing witch's height on the card
 
 def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, cloak and gold are left alone
     im = im.copy(); px = im.load()
@@ -31,24 +32,23 @@ load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGB
 for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)]), ("witch-black", "witch_black", ["sleep_2", "sleep_3", "sleep_4"])]:
     fr = [load(f"{src}_attack_{i}.png") for i in range(9)]
     bb = [f.getbbox() for f in fr]
-    box = [min(b[0] for b in bb), min(b[1] for b in bb), max(b[2] for b in bb), max(b[3] for b in bb)]
-    w, h = box[2] - box[0], box[3] - box[1]
-    s = min((S - 4) / w, (S - 4) / h)
-    def fit(f):
-        c = f.crop(box).resize((round(w * s), round(h * s)), Image.NEAREST)
-        out = Image.new("RGBA", (S, S)); out.paste(c, ((S - c.width) // 2, S - 2 - c.height), c)
+    # Every witch standing (attack_0, staff included) is H px tall with her feet 2px off the bottom, so the witches
+    # match in size and stand in the middle of the card; whatever reaches past the card is cut off at its edge.
+    s = H / (bb[0][3] - bb[0][1])
+    x0 = S // 2 - round((bb[0][0] + bb[0][2]) / 2 * s)
+    y0 = S - 2 - round(bb[0][3] * s)
+    def fit(f, dy=0):
+        big = f.resize((round(f.width * s), round(f.height * s)), Image.NEAREST)
+        out = Image.new("RGBA", (S, S)); out.alpha_composite(big, (x0, y0 - dy))
         return out
     for i, f in enumerate(fr):
         fit(f).save(os.path.join(OUT, f"{id}-atk-{i}.png"))
-    for k, n in enumerate(sleeps):
-        fit(load(f"{src}_{n}.png")).save(os.path.join(HERE, f"{id}-sleep-{k}.png"))
-    print(id, w, h, s)
-    # Her other moves (<src>_<move>_0..8, picked in the Agents menu): the cast's scale and place, so she stays the
-    # same size; effects reaching past the card are cut off at its edge.
-    x0, y0 = (S - round(w * s)) // 2, S - 2 - round(h * s)
-    for move in MOVES:
+    zz = [load(f"{src}_{n}.png") for n in sleeps]
+    # Asleep on the ground she lies lower than her feet: lift the whole loop so it stays 2px off the bottom.
+    lift = max(0, y0 + max(round(z.getbbox()[3] * s) for z in zz) - (S - 2))
+    for k, z in enumerate(zz):
+        fit(z, lift).save(os.path.join(HERE, f"{id}-sleep-{k}.png"))
+    for move in MOVES:  # her other moves (<src>_<move>_0..8), same scale and place
         for i in range(9):
-            f = load(f"{src}_{move}_{i}.png")
-            big = f.resize((round(f.width * s), round(f.height * s)), Image.NEAREST)
-            out = Image.new("RGBA", (S, S)); out.alpha_composite(big, (x0 - round(box[0] * s), y0 - round(box[1] * s)))
-            out.save(os.path.join(OUT, f"{id}-{move}-{i}.png"))
+            fit(load(f"{src}_{move}_{i}.png")).save(os.path.join(OUT, f"{id}-{move}-{i}.png"))
+    print(id, s)
