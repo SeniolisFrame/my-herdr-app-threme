@@ -25,6 +25,7 @@ Same layout, other colors: `.\install.ps1 -Theme <name>`, back with `.\install.p
 | forest | deep green with emerald, amber buttons |
 | ember | warm brown-black with orange |
 | ocean | deep teal with cyan, amber buttons |
+| abyss | blue-black, like kage with blue for violet, blue buttons |
 
 Text colors keep at least 4.5:1 contrast on the backgrounds.
 

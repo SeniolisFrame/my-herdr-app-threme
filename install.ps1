@@ -2,8 +2,8 @@
 # (mods/kage-spaces), tab bar (mods/kage-tabs), pane header (mods/kage-pane), Files and Changes
 # (mods/my-files, mods/my-changes) and the my-herdr layout into herdr-app, switches to both,
 # and points the layout at the kage mods with square 2px pane frames.
-# Run it again after every change or pull. -Theme midnight|sakura|forest|ember|ocean: another color set, same mods.
-param([ValidateSet("kage", "midnight", "sakura", "forest", "ember", "ocean")][string]$Theme = "kage")
+# Run it again after every change or pull. -Theme midnight|sakura|forest|ember|ocean|abyss: another color set, same mods.
+param([ValidateSet("kage", "midnight", "sakura", "forest", "ember", "ocean", "abyss")][string]$Theme = "kage")
 $ErrorActionPreference = "Stop"
 $app = if ($env:HERDR_APP_HOME) { $env:HERDR_APP_HOME } else { Join-Path $HOME ".config\herdr-app" }
 if (-not (Test-Path $app)) { throw "herdr-app folder not found: $app (start herdr-app once first)" }
