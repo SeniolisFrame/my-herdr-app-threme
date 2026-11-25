@@ -99,7 +99,7 @@ const STATUS_MOVE = { done: "done", blocked: "plead" };
 const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } });
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
-const FIRE = 250, CAMP = 6; // ms per campfire frame; witches round one fire (more show as "+N")
+const FIRE = 250, CAMP = 4; // ms per campfire frame; witches round one fire (more show as "+N")
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
@@ -321,11 +321,11 @@ export default class Agents extends View {
       const asleep = !LABEL[a.status] || a.status === "idle", pet = petObj(a.address);
       if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
       const name = folder(ps.find((p) => p.pane === a.pane)?.cwd) ?? a.tab_name;
-      return v_flex().id(`camp-${a.address}`).w(FACE).flex_none().items_center().cursor_pointer()
+      return v_flex().id(`camp-${a.address}`).min_w(FACE).flex_none().items_center().cursor_pointer()
         .on_click(() => run("pane.focus", { pane: a.pane }))
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } }); })
         .tooltip(`${name}: ${LABEL[a.status] ?? "IDLE"}`)
-        .child(div().max_w(FACE).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
+        .child(div().max_w(160).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
         .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${snoreAt(now, pet)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).w(FACE).h(FACE));
     };
     // The fire: campfire-0..5.png (avatars/campfire.py), a frame a beat.
@@ -336,8 +336,9 @@ export default class Agents extends View {
       const here = all.slice(0, CAMP), more = all.length - here.length;
       const left = here.filter((_a, k) => k % 2 === 0), right = here.filter((_a, k) => k % 2 === 1);
       return div().id(`camp-${sp.id}`).relative().flex_1().min_w(0).h_full().overflow_hidden().bg("#0a1226")
-        .child(image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(-((sp.index * 90) % 270)).w(1920).h(222))
-        .child(h_flex().absolute().left(0).right(0).bottom(6).gap(4).justify_center().items_end()
+        // Twice side by side: the band can be wider than one picture (no sidebar on a 1920px screen).
+        .children([0, 1920].map((x) => image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(x - (sp.index * 90) % 270).w(1920).h(222)))
+        .child(h_flex().absolute().left(0).right(0).bottom(6).gap(48).justify_center().items_end()
           .children(left.reverse().map(witch)).child(fire()).children(right.map(witch))
           .when(more > 0, (el) => el.child(div().mb(40).text_color(t.muted).child(`+${more}`))))
         .child(div().absolute().left(8).top(6).px(4).bg("#0a1226cc").text_color(NAME[ink[sp.id]] ?? t.accent).child(sp.name));

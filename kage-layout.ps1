@@ -36,8 +36,9 @@ function Set-LayoutFont([string]$json, $font) {
   $root | ConvertTo-Json -Depth 64
 }
 
-# The row holding the witch board (the forest camps) keeps one height: the forest art is drawn for it, not stretched.
-# -Free (uninstall.ps1): the row holding my-board resizes again, 120-600 as my-herdr-app ships it.
+# The row holding the witch board (the forest camps) keeps one height: the forest art is drawn for it, not stretched,
+# and its sidebar (Spaces list, Settings) is hidden: the top bar lists the spaces and has Settings, the board the agents.
+# -Free (uninstall.ps1): the row holding my-board resizes again, 120-600 as my-herdr-app ships it, its sidebar shown.
 function Set-BoardFixed([string]$json, [switch]$Free) {
   $root = $json | ConvertFrom-Json
   $walk = {
@@ -45,9 +46,11 @@ function Set-BoardFixed([string]$json, [switch]$Free) {
     if (-not $Free -and (@($n.children) | Where-Object { $_.content.props.board })) {
       $h = if ($n.size.px) { $n.size.px } else { 240 }
       $n | Add-Member -Force min $h; $n | Add-Member -Force max $h
+      @($n.children) | Where-Object { $_.id -eq "sidebar" } | ForEach-Object { $_ | Add-Member -Force hidden $true }
     }
     if ($Free -and (@($n.children) | Where-Object { $_.content.mod -eq "my-board" })) {
       $n | Add-Member -Force min 120; $n | Add-Member -Force max 600
+      @($n.children) | Where-Object { $_.id -eq "sidebar" } | ForEach-Object { $_.PSObject.Properties.Remove("hidden") }
     }
     foreach ($c in @($n.children)) { if ($c) { & $walk $c } }
   }

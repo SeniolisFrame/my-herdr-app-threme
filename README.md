@@ -31,7 +31,7 @@ while the agent works or needs you; dozing while it idles. Two witches, picked u
 black witch in a hooded cloak with a branch staff (the default; dozes on her feet) and the blue witch with a crystal
 staff (dozes on the ground). Both have 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
 twirl; violet magic for the black witch, icy blue for the blue one), picked under Move in the same menu; Random, the
-default, draws a new one for each agent whenever its state changes. Right-click a card to give that agent its own witch and move ("As all" goes back). Whatever the move, a DONE agent's witch cheers (hand up, a jump) and a NEEDS YOU one clasps her hands and pleads. With my-herdr-app, install turns its top board into the open space's forest camp (a fixed 240px band, a camp of its own for each space): a campfire with that space's witches round it, asleep while their agent idles, casting while it works; uninstall gives its board back. Each card is named
+default, draws a new one for each agent whenever its state changes. Right-click a card to give that agent its own witch and move ("As all" goes back). Whatever the move, a DONE agent's witch cheers (hand up, a jump) and a NEEDS YOU one clasps her hands and pleads. With my-herdr-app, install turns its top board into the open space's forest camp (a fixed 240px band, a camp of its own for each space): a campfire with that space's witches round it, asleep while their agent idles, casting while it works. That layout's sidebar (the Spaces list, Settings) is hidden: the top bar lists the spaces and has a Settings button. Uninstall gives the board and sidebar back. Each card is named
 after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
@@ -66,7 +66,10 @@ The install sets the layout's `font` and `ui_font` to Unifont too, where it has 
 
 Herdr's tab bar in the same pixel font: each tab named after its terminal's folder (a name you
 gave a tab stays), no program icons, the open tab in the open space's name color with a line
-under it.
+under it. Where the sidebar is hidden (the witch board's layout) it lists the spaces instead: each
+in its own color, a spinner or dot for its most urgent agent; click to switch, drag to reorder,
+double-click to rename, right-click for the space menu, and an agent is reached by its witch on
+the board. Show the sidebar again and the tabs come back. A Settings button sits by the window buttons.
 
 ## 8-bit pane frames (mods/kage-pane)
 

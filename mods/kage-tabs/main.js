@@ -2,8 +2,9 @@ import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
 import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
 
-// kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at
-// its native 16px, no program icons, the open tab in the open space's name color.
+// kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at its native 16px,
+// no program icons. With the sidebar hidden (the witch board's layout, kage-layout.ps1) it lists the spaces
+// instead, each in its name color (an agent is reached by its witch on the board); else the open space's tabs.
 const PIXEL = "Unifont";
 const PX = 16;
 const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
@@ -45,15 +46,16 @@ export default class Tabs extends View {
     try { this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}"); } catch { this.panels = {}; }
     if (!this.panels || typeof this.panels !== "object" || Array.isArray(this.panels)) this.panels = {};
     this.swipe = { acc: 0, steps: 0, at: 0, last: 0 };
+    this.unit = "tab"; // what the wheel steps through: "space" while the bar lists spaces (render)
   }
 
-  // One tab per wheel notch. A touchpad or smooth-scrolling mouse sends many
+  // One tab (or space, see render) per wheel notch. A touchpad or smooth-scrolling mouse sends many
   // small events per gesture: a short swipe or one smoothed notch (about
-  // 25 px) switches one tab, a longer swipe keeps going a tab per 60 px, at
+  // 25 px) switches one, a longer swipe keeps going one per 60 px, at
   // most one every 100 ms so each shows.
   wheel(e) {
     if (e.delta_lines) {
-      if (e.delta_lines.y) run(e.delta_lines.y > 0 ? "tab.prev" : "tab.next");
+      if (e.delta_lines.y) run(e.delta_lines.y > 0 ? `${this.unit}.prev` : `${this.unit}.next`);
       return;
     }
     const s = this.swipe, now = Date.now();
@@ -67,7 +69,7 @@ export default class Tabs extends View {
     s.acc -= Math.sign(s.acc) * need;
     s.steps++;
     s.last = now;
-    run(e.delta.y > 0 ? "tab.prev" : "tab.next");
+    run(e.delta.y > 0 ? `${this.unit}.prev` : `${this.unit}.next`);
   }
 
   // The side panel is remembered per space: switching shows that space's choice
@@ -100,9 +102,12 @@ export default class Tabs extends View {
 
   render() {
     const t = theme();
+    const root = layout(), sidebar = find(root, "sidebar"), w = window();
+    const bySpace = Boolean(sidebar?.hidden);
+    this.unit = bySpace ? "space" : "tab";
     const space = spaces().find(p => p.active);
-    const shown = space?.tabs ?? [];
-    const active = shown.findIndex(tab => tab.active);
+    const shown = bySpace ? spaces() : space?.tabs ?? [];
+    const active = shown.findIndex(x => x.active);
     const selected = shown[active]?.id;
     if (selected !== this.selected || active !== this.selectedIndex) {
       this.selected = selected;
@@ -112,8 +117,27 @@ export default class Tabs extends View {
     const stop = (_e, cx) => cx.stop_propagation();
     const button = (id, label, action) => div().id(id).size(26).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", stop).on_click(action).child(label);
-    const ink = NAME[(shared("space.colors") ?? {})[space?.id]] ?? t.accent;
-    const item = (c, i) => {
+    const colors = shared("space.colors") ?? {};
+    const spaceItem = (w, i) => {
+      const ink = NAME[colors[w.id]] ?? t.accent;
+      return h_flex().id(`space-${w.id}`).h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(PX)
+        .relative().bg(w.active ? t.selected : t.chrome).text_color(ink)
+        .when(w.active, el => el.child(div().absolute().left(8).right(8).bottom(0).h(2).bg(ink)))
+        .hover(s => s.bg(t.hover))
+        .on_mouse_down("left", (e, cx) => { cx.stop_propagation(); this.pressed = i; if (e.click_count === 2) run("space.rename", { id: w.id }); })
+        .on_mouse_up("left", () => {
+          const from = this.pressed; this.pressed = null;
+          // A space moves only among its machine's spaces, as in the Spaces list.
+          if (from !== null && from !== i) { if ((shown[from].machine ?? null) === (w.machine ?? null)) run("space.move", { id: shown[from].id, index: i + 1 }); }
+          else run("space.select", { id: w.id });
+        })
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, height: 260, props: { tab: "space", target: { id: w.id } } }); })
+        .child(div().max_w(220).truncate().child(w.name))
+        .when(w.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
+        .when(w.status === "blocked" || w.status === "done", el => el.child(div().size(6).rounded(3).bg(t[w.status])));
+    };
+    const tabItem = (c, i) => {
+      const ink = NAME[colors[space?.id]] ?? t.accent;
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
       const name = c.named && c.name !== lead?.program?.name ? c.name : folder(lead?.cwd) ?? label(c, lead);
       return h_flex().id(`tab-${c.id}`).h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(PX)
@@ -134,7 +158,6 @@ export default class Tabs extends View {
         .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(6).rounded(3).bg(t[c.status])))
         .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))));
     };
-    const root = layout(), sidebar = find(root, "sidebar"), w = window();
     // Old saved rails and a dragged-narrow sidebar can be smaller than the window buttons.
     const lightsPadding = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
       ? Math.max(10, (root.traffic_lights[0] + 64) / settings().zoom - (sidebar?.hidden ? 0 : sidebar?.size?.px ?? 0))
@@ -157,10 +180,11 @@ export default class Tabs extends View {
       .on_scroll_wheel(e => this.wheel(e))
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
-        .children(shown.map(item)))
+        .children(shown.map(bySpace ? spaceItem : tabItem)))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
+      .child(button("settings", svg("mods/workspace-chrome/settings.svg").size(15), () => run("app.settings")))
       .when(w?.buttons, el => el.child(button("minimize", w.platform === "windows" ? svg("mods/kage-tabs/win-min.svg").size(16) : "−", () => run("window.minimize")))
         .child(button("maximize", w.platform === "windows" ? svg(`mods/kage-tabs/${w.maximized ? "win-restore" : "win-max"}.svg`).size(16) : "□", () => run("window.maximize")))
         .child(button("close-window", w.platform === "windows" ? svg("mods/kage-tabs/win-close.svg").size(16) : svg("mods/pane/close.svg").size(13), () => run("window.close"))));
