@@ -99,9 +99,9 @@ const STATUS_MOVE = { done: "done", blocked: "plead" };
 const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } });
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
+const FIRE = 250, CAMP = 6; // ms per campfire frame; witches round one fire (more show as "+N")
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
-const BOARD = [["blocked", "Needs you"], ["working", "Working"], ["done", "Done"], ["idle", "Idle"]];
 
 function duration(ms) {
   const m = Math.floor(ms / 60000);
@@ -123,6 +123,9 @@ function icon(p, size, color) {
 const KAGE_SPACE = ["#6b4fb3", "#c4224a", "#3d4fb8", "#8a3fa8", "#5a4a8a", "#a8325e"];
 // Unifont at its native 16px for headings and card text (ships in mods/kage-spaces/fonts).
 const PIXEL = "Unifont";
+// A space's name color (lightened tile hue), as in kage-spaces and kage-tabs.
+const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
+  ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
 
 // A popup menu's row (icon, label, a check when on; a click picks and closes) and its section heading.
@@ -163,7 +166,8 @@ export default class Agents extends View {
     // Checked twice per step and redrawn only when the step changes, so a late tick can't skip one.
     cx.timer.every(BEAT, (cx) => {
       const now = Date.now();
-      if ((this.awake && Math.floor(now / BEAT) % FRAMES !== this.step) || this.sleepers.some((p) => snoreAt(now, p) !== this.snore.get(p.id))) cx.notify();
+      if ((this.awake && Math.floor(now / BEAT) % FRAMES !== this.step) || this.sleepers.some((p) => snoreAt(now, p) !== this.snore.get(p.id))
+        || (this.fire !== undefined && Math.floor(now / FIRE) !== this.fire)) cx.notify();
     });
   }
 
@@ -306,20 +310,42 @@ export default class Agents extends View {
     return div().size(7).mx(3).flex_none().rounded(4).bg(a.status === "done" ? color : t.dim + "00");
   }
 
-  // props.board (my-herdr-app's top band, through kage-layout.ps1): the same witch cards in four
-  // columns by status (no status counts as idle), newest change first. It sets no agent order:
-  // next / previous follow the sidebar's.
-  board(t, list, row) {
-    const cols = BOARD.map(([status, label]) => ({ status, label, members: list.filter((a) => (LABEL[a.status] ? a.status : "idle") === status).sort((x, y) => this.since(y) - this.since(x)) }));
-    return h_flex().size_full().min_h(0).bg(t.chrome).px(10).pt(4).gap(10).text_size(13)
-      .children(cols.map((c) => v_flex().flex_1().min_w(0).h_full()
-        .child(h_flex().h(28).flex_none().px(2).gap(8).items_center().font_family(PIXEL).text_size(16)
-          .child(div().text_color(t[c.status] ?? t.dim).child(c.label))
-          .child(div().text_color(t.dim).child(String(c.members.length)))
-          .when(c.status === "idle", (el) => el.child(div().flex_1()).child(div().id("ag-sort").text_color(t.dim).hover((s) => s.text_color(t.foreground))
-            .on_click(openSortMenu)
-            .tooltip("Avatar and move").child(svg("mods/workspace-chrome/layers.svg").size(14)))))
-        .child(v_flex().id(`col-${c.status}`).flex_1().min_h(0).overflow_y_scrollbar().children(c.members.map((a, i) => row(a, i))))));
+  // props.board (my-herdr-app's top band, through kage-layout.ps1): the open space's camp, a twilight forest
+  // (forest-bg.png, 1920x222, a different stretch of it per space) with a campfire in the middle and that
+  // space's witches round it: asleep while the agent idles, casting while it works (no monster yet).
+  // It sets no agent order: next / previous follow the sidebar's.
+  board(t, list, now, step) {
+    this.fire = Math.floor(now / FIRE); // the fire flickers on its own, slower clock
+    const ink = shared("space.colors") ?? {}, ps = panes();
+    const witch = (a) => {
+      const asleep = !LABEL[a.status] || a.status === "idle", pet = petObj(a.address);
+      if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
+      const name = folder(ps.find((p) => p.pane === a.pane)?.cwd) ?? a.tab_name;
+      return v_flex().id(`camp-${a.address}`).w(FACE).flex_none().items_center().cursor_pointer()
+        .on_click(() => run("pane.focus", { pane: a.pane }))
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } }); })
+        .tooltip(`${name}: ${LABEL[a.status] ?? "IDLE"}`)
+        .child(div().max_w(FACE).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
+        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${snoreAt(now, pet)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).w(FACE).h(FACE));
+    };
+    // The fire: campfire-0..5.png (avatars/campfire.py), a frame a beat.
+    const fire = () => image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64).flex_none();
+    const camp = (sp) => {
+      // The most urgent first, so a NEEDS YOU agent is never the one left out.
+      const all = list.filter((a) => a.space === sp.id).sort((x, y) => this.rank(y) - this.rank(x) || this.since(y) - this.since(x));
+      const here = all.slice(0, CAMP), more = all.length - here.length;
+      const left = here.filter((_a, k) => k % 2 === 0), right = here.filter((_a, k) => k % 2 === 1);
+      return div().id(`camp-${sp.id}`).relative().flex_1().min_w(0).h_full().overflow_hidden().bg("#0a1226")
+        .child(image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(-((sp.index * 90) % 270)).w(1920).h(222))
+        .child(h_flex().absolute().left(0).right(0).bottom(6).gap(4).justify_center().items_end()
+          .children(left.reverse().map(witch)).child(fire()).children(right.map(witch))
+          .when(more > 0, (el) => el.child(div().mb(40).text_color(t.muted).child(`+${more}`))))
+        .child(div().absolute().left(8).top(6).px(4).bg("#0a1226cc").text_color(NAME[ink[sp.id]] ?? t.accent).child(sp.name));
+    };
+    return h_flex().relative().size_full().min_h(0).bg(t.chrome).font_family(PIXEL).text_size(16)
+      .children(spaces().filter((sp) => sp.active).map(camp))
+      .child(div().id("ag-sort").absolute().right(8).top(6).text_color(t.dim).hover((s) => s.text_color(t.foreground))
+        .on_click(openSortMenu).tooltip("Avatar and move").child(svg("mods/workspace-chrome/layers.svg").size(14)));
   }
 
   render(cx) {
@@ -344,6 +370,7 @@ export default class Agents extends View {
     const now = Date.now();
     this.track(list, now);
     this.awake = false;
+    this.fire = undefined;
     this.sleepers = [];
     this.snore = new Map(PETS.map((p) => [p.id, snoreAt(now, p)]));
     const step = this.step = Math.floor(now / BEAT) % FRAMES;
@@ -509,7 +536,7 @@ export default class Agents extends View {
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin));
     };
-    if (board) return this.board(t, list, row);
+    if (board) return this.board(t, list, now, step);
 
     // Groups in list order: spaces (grouped) or priority sections. Agents of a
     // space are next to each other in agents(), so neighbours make a group.

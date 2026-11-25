@@ -36,11 +36,30 @@ function Set-LayoutFont([string]$json, $font) {
   $root | ConvertTo-Json -Depth 64
 }
 
+# The row holding the witch board (the forest camps) keeps one height: the forest art is drawn for it, not stretched.
+# -Free (uninstall.ps1): the row holding my-board resizes again, 120-600 as my-herdr-app ships it.
+function Set-BoardFixed([string]$json, [switch]$Free) {
+  $root = $json | ConvertFrom-Json
+  $walk = {
+    param($n)
+    if (-not $Free -and (@($n.children) | Where-Object { $_.content.props.board })) {
+      $h = if ($n.size.px) { $n.size.px } else { 240 }
+      $n | Add-Member -Force min $h; $n | Add-Member -Force max $h
+    }
+    if ($Free -and (@($n.children) | Where-Object { $_.content.mod -eq "my-board" })) {
+      $n | Add-Member -Force min 120; $n | Add-Member -Force max 600
+    }
+    foreach ($c in @($n.children)) { if ($c) { & $walk $c } }
+  }
+  & $walk $root
+  $root | ConvertTo-Json -Depth 64
+}
+
 if ($file) {
   $json = [IO.File]::ReadAllText($file)
   # my-herdr-app's board (its top band) becomes the witch cards in columns.
   $new = $json -replace '("mod":\s*)"my-board"', '$1"kage-agents", "props": { "board": true }'
   $new = $new -replace '("mod":\s*)"agents"', '$1"kage-agents"' -replace '("mod":\s*)"spaces"', '$1"kage-spaces"' -replace '("mod":\s*)"tabs"', '$1"kage-tabs"' -replace '("mod":\s*)"pane"', '$1"kage-pane"'
-  $new = Set-LayoutFont (Set-PaneFrame $new 0 2 0.35) "Unifont"
+  $new = Set-BoardFixed (Set-LayoutFont (Set-PaneFrame $new 0 2 0.35) "Unifont")
   if ($new -ne $json) { [IO.File]::WriteAllText($file, $new) }
 }

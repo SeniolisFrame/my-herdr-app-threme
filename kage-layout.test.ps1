@@ -36,15 +36,19 @@ Assert ($r.font -eq "PxPlus IBM VGA 8x16" -and $r.ui_font -eq "Pixelated MS Sans
 Remove-Item $tmp
 
 # my-herdr-app's board block becomes the witch board, once; uninstall.ps1's pattern turns it back.
-'{"id":"top","children":[{"id":"board","type":"block","content":{"mod":"my-board"}}]}' | Set-Content -Encoding utf8 $tmp
+'{"id":"top","size":{"px":240},"min":120,"max":600,"children":[{"id":"board","type":"block","content":{"mod":"my-board"}}]}' | Set-Content -Encoding utf8 $tmp
 & (Join-Path $PSScriptRoot "kage-layout.ps1") $tmp
 $after = [IO.File]::ReadAllText($tmp)
 $b = ($after | ConvertFrom-Json).children[0].content
 Assert ($b.mod -eq "kage-agents" -and $b.props.board -eq $true) "my-board is kage-agents with board"
+$top = $after | ConvertFrom-Json
+Assert ($top.min -eq 240 -and $top.max -eq 240) "the board's row is fixed at its height"
 & (Join-Path $PSScriptRoot "kage-layout.ps1") $tmp
 Assert ([IO.File]::ReadAllText($tmp) -eq $after) "board: running twice changes nothing"
 $back = $after -replace '("mod":\s*)"kage-agents",\s*"props":\s*\{\s*"board":\s*true\s*\}', '$1"my-board"'
 Assert (($back | ConvertFrom-Json).children[0].content.mod -eq "my-board") "uninstall pattern gives my-board back"
+$free = Set-BoardFixed $back -Free | ConvertFrom-Json
+Assert ($free.min -eq 120 -and $free.max -eq 600) "uninstall lets the board's row resize again"
 Remove-Item $tmp
 
 # Every theme file of the repo can be picked with install.ps1 -Theme (kage, or kage-<name>).
