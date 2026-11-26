@@ -136,9 +136,10 @@ export default class Tabs extends View {
         .when(w.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
         .when(w.status === "blocked" || w.status === "done", el => el.child(div().size(6).rounded(3).bg(t[w.status])));
     };
+    const ps = bySpace ? [] : panes(); // once: every read copies the whole list
     const tabItem = (c, i) => {
       const ink = NAME[colors[space?.id]] ?? t.accent;
-      const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
+      const lead = ps.find(p => p.tab === c.id && p.program?.agent) ?? ps.find(p => p.tab === c.id);
       const name = c.named && c.name !== lead?.program?.name ? c.name : folder(lead?.cwd) ?? label(c, lead);
       return h_flex().id(`tab-${c.id}`).h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(PX)
         // A rename or status dot on this or an earlier tab can push the active one out.
