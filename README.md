@@ -101,10 +101,11 @@ macOS / Linux:
 ```sh
 APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
 mkdir -p "$APP/themes" "$APP/mods/kage-agents"
+for m in kage-agents kage-spaces kage-tabs; do cp shared/kage.js mods/$m/; done
 cp themes/*.json "$APP/themes/" && cp mods/kage-agents/* avatars/witch-*.png "$APP/mods/kage-agents/"
 cp -r mods/kage-spaces mods/kage-tabs mods/kage-pane "$APP/mods/"
 for m in my-files my-changes my-board; do
-  mkdir -p "$APP/mods/$m" && cp -r shared/*.js mods/$m/* "$APP/mods/$m/" && rm -f "$APP/mods/$m/"*.test.mjs
+  mkdir -p "$APP/mods/$m" && cp -r shared/common.js shared/size.js mods/$m/* "$APP/mods/$m/" && rm -f "$APP/mods/$m/"*.test.mjs
   herdr-app check "$APP/mods/$m"     # must say: check passed
 done
 cp layouts/my-herdr.json "$APP/layouts/"

@@ -4,19 +4,8 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { spaces, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, window, layout } from "herdr";
-
-function find(node, id) {
-  if (node?.id === id) return node;
-  for (const child of node?.children ?? []) {
-    const found = find(child, id);
-    if (found) return found;
-  }
-  return null;
-}
-
-// The sidebar's rail goes by its width, not a flag: dragging its edge narrows it too.
-const narrow = () => (find(layout(), "sidebar")?.size?.px ?? Infinity) < 160;
+import { spaces, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, window } from "herdr";
+import { PIXEL, NAME, find, narrow } from "./kage.js";
 
 // Where a space is now: its first terminal's live folder, else where it was made.
 // `ps`: panes(), read once by the caller (each read copies every pane).
@@ -30,10 +19,7 @@ const RAIL_CELL = 32;
 // kage: an 8-bit list. VGA pixel font (ships with Herdr; copied into fonts/ here) at its
 // native 16px so it stays crisp; no tiles, each name in its space's color, lightened to read
 // on black (all at least 5.9:1 on the sidebar's backgrounds).
-const PIXEL = "Unifont";
 const PX = 16;
-const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
-  ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
 const railCell = (el) => h_flex().flex_none().justify_center().child(el);
 const where = (s, ps) => JSON.stringify([s.machine ?? null, place(s, ps)]);
 // A place git couldn't answer for (a machine away): asked again this often, while the window is in front.

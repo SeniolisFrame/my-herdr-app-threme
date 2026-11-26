@@ -9,6 +9,8 @@ $app = if ($env:HERDR_APP_HOME) { $env:HERDR_APP_HOME } else { Join-Path $HOME "
 if (-not (Test-Path $app)) { throw "herdr-app folder not found: $app (start herdr-app once first)" }
 $mod = Join-Path $app "mods\kage-agents"
 New-Item -ItemType Directory -Force (Join-Path $app "themes"), $mod | Out-Null
+# A mod can't import from outside its folder: the kage mods each get a copy of shared/kage.js (git-ignored).
+foreach ($m in "kage-agents", "kage-spaces", "kage-tabs") { Copy-Item (Join-Path $PSScriptRoot "shared\kage.js") (Join-Path $PSScriptRoot "mods\$m") -Force }
 Copy-Item -Recurse -Force (Join-Path $PSScriptRoot "mods\kage-spaces"), (Join-Path $PSScriptRoot "mods\kage-tabs"), (Join-Path $PSScriptRoot "mods\kage-pane") (Join-Path $app "mods")
 Copy-Item (Join-Path $PSScriptRoot "themes\*.json") (Join-Path $app "themes") -Force
 # programs.json may hold the person's own entries: write it only when there is none.
@@ -28,7 +30,7 @@ Remove-Item (Join-Path $mod "bat-*.svg"), (Join-Path $mod "witch-awake*.png"), (
 # Files, Changes and the board (formerly the my-herdr-app repo): a mod can't import from outside its
 # folder, so each gets its own copy of shared/*.js (in the repo too, git-ignored), then herdr-app checks it.
 foreach ($m in "my-files", "my-changes", "my-board") {
-  Copy-Item (Join-Path $PSScriptRoot "shared\*.js") (Join-Path $PSScriptRoot "mods\$m") -Force
+  Copy-Item (Join-Path $PSScriptRoot "shared\*.js") (Join-Path $PSScriptRoot "mods\$m") -Force -Exclude kage.js
   $link = Join-Path $app "mods\$m"
   $item = Get-Item $link -ErrorAction SilentlyContinue
   if ($item -and $item.LinkType) { $item.Delete() } # an older install linked it

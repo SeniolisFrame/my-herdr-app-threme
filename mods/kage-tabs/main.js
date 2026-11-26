@@ -1,26 +1,12 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
 import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
+import { PIXEL, NAME, find, clean, folder } from "./kage.js";
 
 // kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at its native 16px,
 // no program icons. With the sidebar hidden (the witch board's layout, kage-layout.ps1) it lists the spaces
 // instead, each in its name color (an agent is reached by its witch on the board); else the open space's tabs.
-const PIXEL = "Unifont";
 const PX = 16;
-const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
-  ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
-
-function find(node, id) {
-  if (node?.id === id) return node;
-  for (const child of node?.children ?? []) {
-    const found = find(child, id);
-    if (found) return found;
-  }
-  return null;
-}
-
-// Same as the agents mod: drops a status glyph, keeps a leading bracket or quote.
-const clean = (s) => (s ?? "").replace(/^[^\p{L}\p{N}\p{Ps}\p{Pi}]+/u, "").replace(/^\[ [!.] \] /, "").trim();
 
 // A tab Herdr named (unnamed, or after its program) follows its agent's live
 // title, as the agents list does; a name the person gave stays.
@@ -34,10 +20,6 @@ function label(tab, lead) {
   const telling = live && live !== lead.terminal && live !== prog && !path && !live.includes("@") && live.toLowerCase() !== lead.program.key;
   return (tab.name === prog || !tab.named) && telling ? live : base;
 }
-
-// kage: a tab goes by its terminal's folder ("my-herdr-app-threme"); a name the person
-// gave stays, and a tab with no folder (a mod pane) falls back to Herdr's label.
-const folder = (cwd) => cwd?.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || null;
 
 export default class Tabs extends View {
   init() {
