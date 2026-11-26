@@ -59,6 +59,21 @@ function Set-BoardFixed([string]$json, [switch]$Free) {
   $root | ConvertTo-Json -Depth 64
 }
 
+# uninstall.ps1's step for one layout: herdr's own Agents, Spaces, tab bar, pane frames and fonts back.
+# The board (kage's, or my-herdr-app's my-board) becomes herdr's Agents list: uninstall removes my-board too.
+function Undo-KageLayout([string]$json) {
+  # Before the plain one below: the board block's row resizes again and its sidebar shows.
+  $new = $json -replace '("mod":\s*)"kage-agents",\s*"props":\s*\{\s*"board":\s*true\s*\}', '$1"my-board"'
+  if ($new -ne $json) { $new = Set-BoardFixed $new -Free }
+  $new = $new -replace '("mod":\s*)"my-board"', '$1"agents"'
+  $new = $new -replace '("mod":\s*)"kage-agents"', '$1"agents"' -replace '("mod":\s*)"kage-spaces"', '$1"spaces"' -replace '("mod":\s*)"kage-tabs"', '$1"tabs"'
+  # Pane frames back to herdr's own (as in its main layout): rounded 10, 1px border, accent focus.
+  if ($new -match '"kage-pane"') { $new = Set-PaneFrame ($new -replace '("mod":\s*)"kage-pane"', '$1"pane"') 10 1 $null ("border", "accent") }
+  # Apart from the frames: a layout without a pane header (terminals) got the fonts too.
+  if ($new -match '"(ui_)?font":\s*"Unifont"') { $new = Set-LayoutFont $new $null }
+  $new
+}
+
 if ($file) {
   $json = [IO.File]::ReadAllText($file)
   # my-herdr-app's board (its top band) becomes the witch cards in columns.

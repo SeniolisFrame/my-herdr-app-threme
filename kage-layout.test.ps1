@@ -49,11 +49,12 @@ Assert ($top.min -eq 240 -and $top.max -eq 240) "the board's row is fixed at its
 Assert ($top.children[0].hidden -eq $true) "the board's sidebar is hidden"
 & (Join-Path $PSScriptRoot "kage-layout.ps1") $tmp
 Assert ([IO.File]::ReadAllText($tmp) -eq $after) "board: running twice changes nothing"
-$back = $after -replace '("mod":\s*)"kage-agents",\s*"props":\s*\{\s*"board":\s*true\s*\}', '$1"my-board"'
-Assert (($back | ConvertFrom-Json).children[1].content.mod -eq "my-board") "uninstall pattern gives my-board back"
-$free = Set-BoardFixed $back -Free | ConvertFrom-Json
+$free = Undo-KageLayout $after | ConvertFrom-Json
+# uninstall.ps1 removes my-board with the rest: herdr's own Agents list takes the board's place.
+Assert ($free.children[1].content.mod -eq "agents" -and $null -eq $free.children[1].content.props.board) "uninstall gives the board to herdr's Agents"
 Assert ($free.min -eq 120 -and $free.max -eq 600) "uninstall lets the board's row resize again"
 Assert ($null -eq $free.children[0].hidden) "uninstall shows the sidebar again"
+Assert ((Undo-KageLayout '{"content":{"mod":"my-board"}}' | ConvertFrom-Json).content.mod -eq "agents") "an older my-board block goes to herdr's Agents too"
 Remove-Item $tmp
 
 # Every theme file of the repo can be picked with install.ps1 -Theme (kage, or kage-<name>).
