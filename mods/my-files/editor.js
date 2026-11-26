@@ -129,9 +129,10 @@ export const editorMethods = {
     let start = 0;
     for (let i = 1; i < line && start >= 0; i++) start = text.indexOf("\n", start) + 1 || -1;
     if (start < 0) return;
-    const eol = text.indexOf("\n", start), w = word ? text.indexOf(word, start) : -1;
-    const hit = w >= 0 && (eol < 0 || w < eol);
-    this.code.set_selected_range({ start: hit ? w : start, end: hit ? w + word.length : start });
+    // The search ignores case, so finding the word on its line does too.
+    const eol = text.indexOf("\n", start), at = word ? findAll(text.slice(start, eol < 0 ? undefined : eol), word)[0] : undefined;
+    const hit = at !== undefined;
+    this.code.set_selected_range({ start: hit ? start + at : start, end: hit ? start + at + word.length : start });
     this.code.focus();
   },
 
