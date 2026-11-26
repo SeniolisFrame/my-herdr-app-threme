@@ -26,7 +26,8 @@ function card(a, color, t) {
 export default class Board extends View {
   init() { loadTextSizes(); }
   render() {
-    const t = theme(), list = agents();
+    // A status the board has no column for (none reported yet) counts as idle, as on the witch cards.
+    const t = theme(), list = agents().map(a => GROUPS.some(([k]) => k === a.status) ? a : { ...a, status: "idle" });
     // The app's next/previous agent keys go column by column, as the board reads.
     setAgentOrder(GROUPS.flatMap(([key]) => list.filter(a => a.status === key).map(a => a.address)));
     return h_flex().size_full().px(12).py(10).gap(12).text_size(sz("xs")).text_color(t.foreground)
