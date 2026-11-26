@@ -36,8 +36,7 @@ const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff",
   ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
 const railCell = (el) => h_flex().flex_none().justify_center().child(el);
 const where = (s, ps) => JSON.stringify([s.machine ?? null, place(s, ps)]);
-// Changes made outside Herdr (an editor's save, a commit in another app): looked
-// for this often, in repos the list shows, while the window is in front.
+// A place git couldn't answer for (a machine away): asked again this often, while the window is in front.
 const FALLBACK = 60000;
 // Places looked at together (two git runs each). All at once, a few hundred spaces
 // run out of the app's open files (256 when started from the Dock on macOS) or
@@ -106,7 +105,7 @@ export default class Spaces extends View {
 
   // Places whose git could have changed: new ones (a new space, a cd), where a
   // command or an agent's turn just ended (a checkout, a commit, edits), those on
-  // a machine that is back, and repos in view whose fallback is due.
+  // a machine that is back, and unanswered ones whose fallback is due.
   due(now, sp, ps) {
     // Moved there: what it knew of that place may be old.
     const at = {};
@@ -136,8 +135,7 @@ export default class Spaces extends View {
     }
     if (window().active) {
       for (const k of keys) {
-        const asks = this.git[k] || this.unsure.has(k);
-        if (asks && !this.folded.has(JSON.parse(k)[0]) && now - (this.checked[k] ?? 0) > FALLBACK) due.add(k);
+        if (this.unsure.has(k) && !this.folded.has(JSON.parse(k)[0]) && now - (this.checked[k] ?? 0) > FALLBACK) due.add(k);
       }
     }
     return due;
