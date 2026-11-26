@@ -129,6 +129,7 @@ const PIXEL = "Unifont";
 const NAME = { "#6b4fb3": "#b98cff", "#c4224a": "#ff6b86", "#3d4fb8": "#8fa4ff", "#8a3fa8": "#dd8cff", "#5a4a8a": "#b3a6e0", "#a8325e": "#ff8fb5",
   ansi6: "#b98cff", ansi3: "#ff6b86", ansi4: "#8fa4ff", ansi5: "#dd8cff", ansi2: "#b3a6e0", ansi1: "#ff8fb5" };
 const LABEL = { working: "WORKING", blocked: "NEEDS YOU", done: "DONE", idle: "IDLE" };
+const asleep = (a) => !LABEL[a.status] || a.status === "idle";
 
 // A popup menu's row (icon, label, a check when on; a click picks and closes) and its section heading.
 const menuRow = (t) => (id, label, icon, on, pick) => h_flex()
@@ -278,6 +279,18 @@ export default class Agents extends View {
         own.move === m.id, () => pick(address, "move", m.id))));
   }
 
+  // The witch's picture now: dozing while the agent idles, else its move (or done / plead). Notes who is
+  // awake or asleep, so the frame timer redraws only when a shown frame changes.
+  frame(a, step) {
+    const pet = petObj(a.address);
+    if (asleep(a)) {
+      if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
+      return `mods/kage-agents/${pet.id}-sleep-${this.snore.get(pet.id)}.png`;
+    }
+    this.awake = true;
+    return `mods/kage-agents/${pet.id}-${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}.png`;
+  }
+
   peek(addr) {
     run("terminal.peek", { terminal: addr });
   }
@@ -339,8 +352,6 @@ export default class Agents extends View {
     this.fire = Math.floor(now / FIRE); // the fire flickers on its own, slower clock
     const ink = shared("space.colors") ?? {}, ps = panes();
     const witch = (a) => {
-      const asleep = !LABEL[a.status] || a.status === "idle", pet = petObj(a.address);
-      if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
       const name = folder(ps.find((p) => p.pane === a.pane)?.cwd) ?? a.tab_name;
       return v_flex().id(`camp-${a.address}`).min_w(FACE).flex_none().items_center().cursor_pointer()
         .on_click(() => run("pane.focus", { pane: a.pane }))
@@ -349,7 +360,7 @@ export default class Agents extends View {
         .when(a.status === "working" && this.says.has(a.address), (el) => el.child(div().max_w(160).mb(2).px(6).py(1)
           .bg(t.background).border_2().border_color(t.foreground).text_color(t.foreground).child(this.says.get(a.address))))
         .child(div().max_w(160).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
-        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${snoreAt(now, pet)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).w(FACE).h(FACE));
+        .child(image(this.frame(a, step)).w(FACE).h(FACE));
     };
     // The fire: campfire-0..5.png (avatars/campfire.py), a frame a beat.
     const fire = () => image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64).flex_none();
@@ -514,11 +525,8 @@ export default class Agents extends View {
       const own = tab?.named && tab.name !== a.program?.name ? tab.name : null;
       const name = own ?? folder(cwdOf.get(a.pane)) ?? (full ? label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
       // Witch card: dozing while the agent idles, casting while it works.
-      const asleep = !LABEL[a.status] || a.status === "idle";
-      const pet = petObj(a.address);
-      if (!asleep) this.awake = true; else if (!this.sleepers.includes(pet)) this.sleepers.push(pet);
-      const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep ? t.border : t.accent).bg(t.canvas)
-        .child(image(`mods/kage-agents/${pet.id}-${asleep ? `sleep-${this.snore.get(pet.id)}` : `${STATUS_MOVE[a.status] ?? moveOf(a.address, this.since(a))}-${step}`}.png`).absolute().left(0).top(0).w(FACE).h(FACE));
+      const face = div().relative().w(FACE + 2).h(FACE + 2).flex_none().rounded(6).border_1().border_color(asleep(a) ? t.border : t.accent).bg(t.canvas)
+        .child(image(this.frame(a, step)).absolute().left(0).top(0).w(FACE).h(FACE));
       const tint = t[a.status] ?? t.dim;
       const badge = div().flex_none().px(5).h(20).rounded(3).border_1().border_color(tint).text_size(16).font_bold().text_color(tint).flex().items_center().child(LABEL[a.status] ?? "IDLE");
       return h_flex()
