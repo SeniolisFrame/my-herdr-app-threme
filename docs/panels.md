@@ -85,9 +85,6 @@ make it taller.
   - **Undo last commit** (click twice): the last commit's changes go back to
     Staged and its message back in the box. It warns when that commit is already
     pushed.
-  - **Ask chat to write it**: types a request into the chat for the agent to read
-    the staged diff and save a message to `.git/MY_HERDR_COMMIT_MSG`. Press Enter
-    in the chat; the message shows up in the box when the agent saves it.
 - **⎇ branch**: check out a local or remote branch, create one, or **Merge into
   current**. **Fetch**, **Pull**, **Push** (a new branch is pushed to `origin`),
   **Stash** (untracked files too), **Pop**.

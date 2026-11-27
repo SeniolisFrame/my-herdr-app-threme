@@ -145,9 +145,7 @@ export const viewMethods = {
       .child(h_flex().gap(6).items_center().flex_wrap()
         .child(button("amend", h_flex().gap(6).items_center().child(checkbox(this.amend, t, false, canAmend)).child("Amend"), t, (_e, cx) => this.toggleAmend(cx), { active: this.amend, enabled: canAmend }))
         .child(confirmButton("undo", "Undo last commit", undo !== undefined, t,
-          (_e, cx) => this.undoCommit(cx), { ask: "Undo", danger: undo !== undefined, enabled: this.hasHead && !this.busy && !this.inProgress }))
-        .child(div().flex_1())
-        .child(button("ask", "Ask chat to write it", t, (_e, cx) => this.askChat(cx), { enabled: staged > 0 })))
+          (_e, cx) => this.undoCommit(cx), { ask: "Undo", danger: undo !== undefined, enabled: this.hasHead && !this.busy && !this.inProgress })))
       .child(h_flex().gap(8)
         .child(div().id("commit-message").flex_1().min_w(0).h(32).px(10).flex().items_center().rounded(rad(8)).border_1()
           .border_color(this.typing === "message" ? t.accent : t.border).cursor_text().on_mouse_down("left", (_e, cx) => cx.stop_propagation())

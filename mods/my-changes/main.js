@@ -1,6 +1,6 @@
 // Changes: git status of the focused pane's repo. Unstaged and staged
-// lists; stage files, hunks or single lines; discard, commit, amend, undo commit, ask
-// the chat for a message; branches, merge, fetch/pull/push, stash; the history graph
+// lists; stage files, hunks or single lines; discard, commit, amend, undo commit;
+// branches, merge, fetch/pull/push, stash; the history graph
 // with checkout, merge, cherry-pick, revert, branch delete and tags.
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex, InputState } from "gpui-base";
@@ -21,9 +21,6 @@ export default class Changes extends View {
     // shortcut: kept until the app closes, even for closed tabs; fine for a handful, drop on tab close if many.
     this.saved = new Map(); this.latest = new Map();
     this.openWidth = 460; // unfolding goes back to this until the panel has been seen open (layout's px)
-    // Per repo (git dir): the message file asked of the chat and its text before; kept across every
-    // switch of pane, tab or workspace, so the message lands whenever that repo shows again.
-    this.asks = new Map();
     // The commit message box is one box: what is typed in it is kept per repo (git dir), so
     // repos in other tabs or workspaces commit side by side. boxFor: the repo it shows now.
     this.typed = new Map(); this.boxFor = null;
@@ -75,7 +72,6 @@ export default class Changes extends View {
       commit: () => { if (arg) this.message.set_value(arg); this.hasMessage = Boolean(this.message.value().trim()); this.commit(cx); },
       amend: () => this.toggleAmend(cx),
       undo: () => this.undoCommit(cx),
-      ask: () => this.askChat(cx),
       fetch: () => this.fetch(cx), pull: () => this.pull(cx), push: () => this.push(cx),
       stash: () => this.stash(cx), pop: () => this.pop(cx), abort: () => this.abort(cx),
       branches: () => this.openBranches(cx),
@@ -203,7 +199,6 @@ export default class Changes extends View {
         if (this.logRoot !== root && !this.logToken) this.loadLog(cx); // read the history ahead, once per repo
         if (inProgress) this.amend = false; // a merge started meanwhile: Commit must not rewrite the last commit
         this.watch(root, cx);
-        await this.takeAskedMessage();
         const items = this.items();
         if (this.sel && !items.some((x) => x.path === this.sel.path && x.side === this.sel.side)) {
           this.sel = items.find((x) => x.path === this.sel.path) ?? null; // staged all of it: follow it to the other list
@@ -324,7 +319,6 @@ export default class Changes extends View {
 
   render(cx) {
     if (locationKey() !== this.context) this.refresh(cx);
-    this.checkAsk(cx);
     const t = theme(), f = this.selected(), item = this.sel, full = this.isFull();
     if (this.folded) return foldedStrip("changes", "«", "Show Changes", t, () => foldPanel(this, "changes", false))
       .id("my-changes").on_size_change(({ width }, cx) => trackWidth(this, width, cx));

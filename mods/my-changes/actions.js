@@ -1,8 +1,8 @@
 // Changes: what the buttons do (stage, discard, commit, remote, stash, branches).
-import { exec, readTextFile, writeTextFile, appHome, setShared, agents, run } from "herdr";
-import { READ, git, sendToChat, chatTerminal, stacked } from "./common.js";
+import { exec, readTextFile, writeTextFile, appHome, setShared, run } from "herdr";
+import { READ, git, stacked } from "./common.js";
 import { oneHunk, someLines, toCrlf } from "./patch.js";
-import { NET, CONFLICTS, ASK_FILE, sides, moveSide } from "./status.js";
+import { NET, CONFLICTS, sides, moveSide } from "./status.js";
 
 export const actionsMethods = {
   // Runs one git job at a time, shows its result, then refreshes.
@@ -202,57 +202,6 @@ export const actionsMethods = {
       this.message.set_value(last.trim()); this.hasMessage = Boolean(last.trim());
       return "Last commit undone: its changes are staged again";
     }, cx);
-  },
-
-  // Asks the chat's agent to write the message into .git/MY_HERDR_COMMIT_MSG. The file is read
-  // when that agent finishes a turn (checkAsk), and on each refresh of this repo (a chat that
-  // reports no status, a switch away and back).
-  askChat(cx) {
-    const gitDir = this.gitDir;
-    if (!gitDir) return;
-    const file = `${gitDir}/${ASK_FILE}`.replace(/\//g, gitDir.includes("\\") ? "\\" : "/");
-    cx.spawn(async (cx) => {
-      // The text before goes in first: a refresh meanwhile must not take the old message as new.
-      // The old message is emptied out of the file (here; on another machine it is remembered
-      // instead): the agent may well write the same text again, and that must show too.
-      const agent = chatTerminal(), before = await readTextFile(file, { on: this.on }).catch(() => null);
-      let last = before;
-      if (!this.on && before) last = await writeTextFile(file, "", before).then(() => "", () => before);
-      const ask = { file, on: this.on, agent, last };
-      this.asks.set(gitDir, ask);
-      try {
-        await sendToChat(`Write a git commit message for the staged changes (git diff --cached). Save only the message to ${file}, replacing that file. Don't commit.`, cx);
-        this.note = { text: "Asked the chat: press Enter there. The message shows up here when it's saved." };
-      } catch (e) { this.note = { text: `Not sent: ${e.message ?? e}`, error: true }; cx.notify(); return; }
-      cx.notify();
-    });
-  },
-
-  // From render (agents() is live, so a status change draws again): once an asked agent has
-  // been working and stops, its repo's message file is read, whichever repo shows. No timer, no git.
-  checkAsk(cx) {
-    for (const [gitDir, ask] of this.asks) {
-      if (!ask.agent || ask.taking) continue;
-      const status = agents().find((a) => a.address === ask.agent)?.status;
-      if (status === "working") { ask.working = true; continue; }
-      if (!ask.working) continue;
-      ask.working = false; ask.taking = true;
-      cx.spawn(async (cx) => { await this.takeAskedMessage(gitDir).catch(() => {}); ask.taking = false; cx.notify(); });
-    }
-  },
-
-  // Says whether a new message came. It goes in the box when the box shows that repo, else it
-  // waits in that repo's kept text until the repo shows.
-  async takeAskedMessage(gitDir = this.gitDir) {
-    const ask = gitDir && this.asks.get(gitDir);
-    if (!ask) return false;
-    const text = await readTextFile(ask.file, { on: ask.on }).catch(() => null);
-    if (!text?.trim() || text === ask.last) return false;
-    ask.last = text;
-    if (this.boxFor !== gitDir) { this.typed.set(gitDir, text.trim()); return true; }
-    this.message.set_value(text.trim()); this.hasMessage = true;
-    this.note = { text: "The chat wrote a commit message: check it, then Commit" };
-    return true;
   },
 
   pull(cx) { this.act("Pull", async () => { await this.git(["pull", "--no-edit"], NET); return "Pulled"; }, cx); },
