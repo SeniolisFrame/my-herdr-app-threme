@@ -131,7 +131,7 @@ const menuHead = (t) => (text, pt) => div().px(8).pt(pt).pb(6).text_size(11).tex
 
 export default class Agents extends View {
   init(_props, cx) {
-    if (props()?.sortMenu || props()?.agentMenu) return;
+    if (props()?.sortMenu || props()?.agentMenu || props()?.campMenu) return;
     this.folded = new Set();
     // Each agent's last state and when it changed (ms), in the shared store (persisted), so the sidebar and the
     // board stamp a change once and agree on it (the random move is drawn from it). Older installs kept it here.
@@ -265,10 +265,11 @@ export default class Agents extends View {
   campMenu(t, id) {
     const sp = spaces().find((s) => s.id === id), row = menuRow(t);
     const tabs = sp ? idleTabs(sp) : [];
-    return v_flex().size_full().p(5).bg(t.popover).text_size(12.8)
+    return v_flex().w_full().p(5).bg(t.popover).text_size(12.8)
       .child(menuHead(t)(sp ? `${sp.name}: no agent yet` : "Space closed", 4))
       .when(tabs.length === 0, (el) => el.child(div().px(8).py(6).text_color(t.dim).child("Every terminal has an agent")))
-      .child(v_flex().id("camp-list").flex_1().min_h(0).overflow_y_scrollbar().children(tabs.map(({ tab, p }) => row(`camp-tab-${tab.id}`, tab.named ? tab.name : folder(p.cwd) ?? tab.name,
+      // 31px rows, at most 10 shown: keep in step with the popup height the fire opens it at (board()).
+      .child(v_flex().id("camp-list").max_h(31 * 10).overflow_y_scrollbar().children(tabs.map(({ tab, p }) => row(`camp-tab-${tab.id}`, tab.named ? tab.name : folder(p.cwd) ?? tab.name,
         svg("mods/workspace-chrome/terminal.svg").size(14).flex_none().text_color(t.muted), p.focused, () => run("pane.focus", { pane: p.pane }))
         // ✕ closes that terminal's tab; the menu stays open for the rest.
         .child(div().id(`camp-close-${tab.id}`).p(3).rounded(4).flex_none().text_color(t.dim).hover((s) => s.bg(t.hover).text_color(t.foreground))
