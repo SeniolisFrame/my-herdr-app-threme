@@ -54,9 +54,10 @@ const SORTS = [
 ];
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
 // The card's witch, picked in the sort popup: <id>-atk-0..8.png while the agent works, <id>-sleep-0..n.png while it
-// idles (the blue witch nods off in 8 quick frames, the black one dozes in 3 slow ones).
+// idles (the blue witch nods off in 8 quick frames, the black one dozes in 3 slow ones, the fire mage in 6 at 400ms).
 // The art is drawn at this size (avatars/witch_attack.py), so it is shown 1:1.
-const PETS = [{ id: "witch", label: "Blue witch", sleep: 8, ms: 250 }, { id: "witch-black", label: "Black witch", sleep: 3, ms: 750 }];
+const PETS = [{ id: "witch", label: "Blue witch", sleep: 8, ms: 250 }, { id: "witch-black", label: "Black witch", sleep: 3, ms: 750 },
+  { id: "witch-fire", label: "Fire mage", sleep: 6, ms: 400 }];
 // One agent's own witch and move, set by right-clicking its card: { [address]: { pet?, move? } } (persisted).
 const picks = () => shared("agents.picks") ?? {};
 const pick = (address, key, value) => {
@@ -85,7 +86,9 @@ const moveOf = (address, since) => {
 };
 // DONE cheers (hand up, a jump) and NEEDS YOU pleads (hands clasped), whatever the move.
 const STATUS_MOVE = { done: "done", blocked: "plead" };
-const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } });
+// Popup heights: the fixed rows plus one 31px row (menuRow) per pet, so a new pet doesn't push the last move off.
+const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 408 + 31 * PETS.length, props: { sortMenu: true } });
+const openAgentMenu = (address) => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 368 + 31 * PETS.length, props: { agentMenu: address } });
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
 const FIRE = 250, CAMP = 8; // ms per campfire frame; witches round one fire (more show as "+N")
@@ -353,7 +356,7 @@ export default class Agents extends View {
       const name = folder(ps.find((p) => p.pane === a.pane)?.cwd) ?? a.tab_name;
       return v_flex().id(`camp-${a.address}`).min_w(FACE).flex_none().items_center().cursor_pointer()
         .on_click(() => run("pane.focus", { pane: a.pane }))
-        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } }); })
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openAgentMenu(a.address); })
         .tooltip(`${name}: ${LABEL[a.status] ?? "IDLE"}`)
         .when(a.status === "working" && this.says.has(a.address), (el) => el.child(div().max_w(160).mb(2).px(6).py(1)
           .bg(t.background).border_2().border_color(t.foreground).text_color(t.foreground).child(this.says.get(a.address))))
@@ -559,7 +562,7 @@ export default class Agents extends View {
         .on_click(() => run("pane.focus", { pane: a.pane }))
         .on_mouse_down("right", (_e, cx) => {
           cx.stop_propagation();
-          openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 430, props: { agentMenu: a.address } });
+          openAgentMenu(a.address);
         })
         .tooltip("Right-click: this agent's witch and move")
         .child(div().id(`agent-fold-${a.address}`)

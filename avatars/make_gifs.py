@@ -13,7 +13,7 @@ def gif(out, pattern, ms):
     frames[0].save(out, save_all=True, append_images=frames[1:], duration=ms, loop=0, disposal=1)
     print(out, len(files))
 # One entry per pet in main.js PETS: (id, its ms per sleep frame).
-for pet, sleep_ms in [('witch-black', 750), ('witch', 250)]:
+for pet, sleep_ms in [('witch-black', 750), ('witch', 250), ('witch-fire', 400)]:
     for src in ['atk', 'strike', 'fireball', 'circle', 'lightning', 'hand', 'twirl', 'done', 'plead']:
         gif(f'docs/gifs/{pet}-{"cast" if src == "atk" else src}.gif', f'mods/kage-agents/{pet}-{src}-[0-9]*.png', 125)
     gif(f'docs/gifs/{pet}-sleep.gif', f'avatars/{pet}-sleep-[0-9]*.png', sleep_ms)

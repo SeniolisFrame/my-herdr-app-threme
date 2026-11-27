@@ -32,28 +32,29 @@ Text colors keep at least 4.5:1 contrast on the backgrounds.
 ## Witch cards (mods/kage-agents)
 
 A copy of herdr's Agents list where each agent is a card with a pixel-art witch (Pixellab): casting a spell, facing you,
-while the agent works or needs you; dozing while it idles. Two witches, picked under Avatar in the sort menu: the
-black witch in a hooded cloak with a branch staff (the default; dozes on her feet) and the blue witch with a crystal
-staff (dozes on the ground). Both have 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
-twirl; violet magic for the black witch, icy blue for the blue one), picked under Move in the same menu; Random, the
+while the agent works or needs you; dozing while it idles. Three witches, picked under Avatar in the sort menu: the
+black witch in a hooded cloak with a branch staff (the default; dozes on her feet), the blue witch with a crystal
+staff (dozes on the ground) and the fire mage in a black witch hat and crimson robe with a burning staff (dozes leaning
+on it). Each has 7 moves (cast, staff strike, fireball, magic circle, lightning, hand spell, staff
+twirl; violet magic for the black witch, icy blue for the blue one, fire for the fire mage), picked under Move in the same menu; Random, the
 default, draws a new one for each agent whenever its state changes. Right-click a card to give that agent its own witch and move ("As all" goes back). Whatever the move, a DONE agent's witch cheers (hand up, a jump) and a NEEDS YOU one clasps her hands and pleads. Install turns the layout's top board into the open space's forest camp (a fixed 200px band, a camp of its own for each space): a campfire with that space's witches round it, asleep while their agent idles, casting while it works, with a speech bubble over a working Claude Code's witch chanting a spell for the step it's on (its newest `●` line, read every 3s): Perspicio! reading, Transmuto! changing a file, Ignis! running a command, Inquiro! searching, Veni, familiaris! a helper agent, another spell for its own words. That layout's sidebar (the Spaces list, Settings) is hidden: the top bar lists the spaces and has a Settings button. Uninstall gives the board and sidebar back. Each card is named
 after its terminal's folder, like the tabs. `programs.json` draws the Claude icon in violet instead of orange (install writes
 it only if you have none). It also paints the
 space tiles in kage hues (violet, crimson, indigo, plum, dusk, wine) in place of the stock
 teal/orange/blue.
 
-| | black | blue |
-|---|---|---|
-| cast | ![](docs/gifs/witch-black-cast.gif) | ![](docs/gifs/witch-cast.gif) |
-| strike | ![](docs/gifs/witch-black-strike.gif) | ![](docs/gifs/witch-strike.gif) |
-| fireball | ![](docs/gifs/witch-black-fireball.gif) | ![](docs/gifs/witch-fireball.gif) |
-| circle | ![](docs/gifs/witch-black-circle.gif) | ![](docs/gifs/witch-circle.gif) |
-| lightning | ![](docs/gifs/witch-black-lightning.gif) | ![](docs/gifs/witch-lightning.gif) |
-| hand | ![](docs/gifs/witch-black-hand.gif) | ![](docs/gifs/witch-hand.gif) |
-| twirl | ![](docs/gifs/witch-black-twirl.gif) | ![](docs/gifs/witch-twirl.gif) |
-| done | ![](docs/gifs/witch-black-done.gif) | ![](docs/gifs/witch-done.gif) |
-| plead | ![](docs/gifs/witch-black-plead.gif) | ![](docs/gifs/witch-plead.gif) |
-| sleep | ![](docs/gifs/witch-black-sleep.gif) | ![](docs/gifs/witch-sleep.gif) |
+| | black | blue | fire |
+|---|---|---|---|
+| cast | ![](docs/gifs/witch-black-cast.gif) | ![](docs/gifs/witch-cast.gif) | ![](docs/gifs/witch-fire-cast.gif) |
+| strike | ![](docs/gifs/witch-black-strike.gif) | ![](docs/gifs/witch-strike.gif) | ![](docs/gifs/witch-fire-strike.gif) |
+| fireball | ![](docs/gifs/witch-black-fireball.gif) | ![](docs/gifs/witch-fireball.gif) | ![](docs/gifs/witch-fire-fireball.gif) |
+| circle | ![](docs/gifs/witch-black-circle.gif) | ![](docs/gifs/witch-circle.gif) | ![](docs/gifs/witch-fire-circle.gif) |
+| lightning | ![](docs/gifs/witch-black-lightning.gif) | ![](docs/gifs/witch-lightning.gif) | ![](docs/gifs/witch-fire-lightning.gif) |
+| hand | ![](docs/gifs/witch-black-hand.gif) | ![](docs/gifs/witch-hand.gif) | ![](docs/gifs/witch-fire-hand.gif) |
+| twirl | ![](docs/gifs/witch-black-twirl.gif) | ![](docs/gifs/witch-twirl.gif) | ![](docs/gifs/witch-fire-twirl.gif) |
+| done | ![](docs/gifs/witch-black-done.gif) | ![](docs/gifs/witch-done.gif) | ![](docs/gifs/witch-fire-done.gif) |
+| plead | ![](docs/gifs/witch-black-plead.gif) | ![](docs/gifs/witch-plead.gif) | ![](docs/gifs/witch-fire-plead.gif) |
+| sleep | ![](docs/gifs/witch-black-sleep.gif) | ![](docs/gifs/witch-sleep.gif) | ![](docs/gifs/witch-fire-sleep.gif) |
 
 `python avatars/witch_attack.py` fits the Pixellab frames in `avatars/pixellab/` into the 96px card art;
 `python avatars/make_gifs.py` then remakes the GIFs above.

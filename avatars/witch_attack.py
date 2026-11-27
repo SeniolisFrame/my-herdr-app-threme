@@ -2,6 +2,8 @@
 # (picked in the Agents menu):
 #   witch        front-facing witch2, blue cloak and crystal staff (witch_front_*; asleep: nod_0..7, sitting and nodding)
 #   witch-black  black hooded cloak and branch staff (witch_black_*; asleep: sleep_2..4, eyes shut; 0-1 still nod off)
+#   witch-fire   witch_front restyled: black witch hat, crimson robe with flame hem, burning staff (witch_fire_*;
+#                asleep: sleep_3..8, eyes shut). Not paled: pale() would turn her flames and hat band pink.
 # Each gives mods/kage-agents/<id>-atk-0..8.png (the cast, while an agent works) and avatars/<id>-sleep-0..n.png
 # (asleep), and <id>-<move>-0..8.png for her six other moves (<src>_<move>_*). One scale (nearest) per
 # witch, from her standing height, so every witch is the same size in every frame; skin is paled.
@@ -27,9 +29,13 @@ def pale(im):  # skin tones (orange-ish hues) lighter and less saturated; hair, 
             px[x, y] = (round(r * 255), round(g * 255), round(b * 255), a)
     return im
 MOVES = ["strike", "fireball", "circle", "lightning", "hand", "twirl", "done", "plead"]  # done, plead: the DONE and NEEDS YOU cards
-load = lambda n: pale(Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA"))
+NOT_PALED = {"witch_fire"}
+def load(n):
+    im = Image.open(os.path.join(HERE, "pixellab", n)).convert("RGBA")
+    return im if n.rsplit("_", 2)[0] in NOT_PALED else pale(im)
 
-for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)]), ("witch-black", "witch_black", ["sleep_2", "sleep_3", "sleep_4"])]:
+for id, src, sleeps in [("witch", "witch_front", [f"nod_{i}" for i in range(8)]), ("witch-black", "witch_black", ["sleep_2", "sleep_3", "sleep_4"]),
+                        ("witch-fire", "witch_fire", [f"sleep_{i}" for i in range(3, 9)])]:
     fr = [load(f"{src}_attack_{i}.png") for i in range(9)]
     bb = [f.getbbox() for f in fr]
     # Every witch standing (attack_0, staff included) is H px tall with her feet 2px off the bottom, so the witches

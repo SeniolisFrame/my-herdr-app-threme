@@ -7,7 +7,8 @@ description: Make a new character (or restyle one) for the kage-agents witch car
 
 The cards show one character per agent: 9 frames of a move while the agent works, a sleep loop while it idles.
 Art is Pixellab frames in `avatars/pixellab/`, turned into 96px card art by `python avatars/witch_attack.py`.
-Existing pets: `witch` (blue, source `witch_front`) and `witch-black` (source `witch_black`).
+Existing pets: `witch` (blue, source `witch_front`), `witch-black` (source `witch_black`) and `witch-fire` (fire mage,
+source `witch_fire`, a restyle of `witch_front`).
 
 ## Ground rules (learned the hard way)
 
@@ -70,6 +71,8 @@ then decide - don't animate a look the user hasn't approved.
   the staff, not the whole bottom row (staff and cloak skew it). Skip frames with under ~30 effect pixels.
 - **Effects past the card:** moves keep the standing frame's scale (`H`) and centre, so big effects get cut at the 96px edge. That's
   intended - the character stays the same size in every move.
+- **Orange/red magic turns pink:** `pale()` in `witch_attack.py` lightens orange-ish pixels to pale the skin, so it also
+  washes out fire, orange bands and flame hems. Add the source to `NOT_PALED` for a fire-coloured character.
 - Note any hand-edited source in the header of `witch_attack.py` so a re-download doesn't silently undo it.
 - Status moves: every pet also needs `done` (cheer: hand up, a jump) and `plead` (hands clasped, begging face) - the DONE and
   NEEDS YOU cards play them (`STATUS_MOVE` in main.js); they are in `MOVES` in witch_attack.py but not in the menu.
