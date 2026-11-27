@@ -45,7 +45,7 @@ function Set-BoardFixed([string]$json, [switch]$Free) {
   $walk = {
     param($n)
     if (-not $Free -and (@($n.children) | Where-Object { $_.content.props.board })) {
-      $h = if ($n.size.px) { $n.size.px } else { 240 }
+      $h = if ($n.size.px) { $n.size.px } else { 200 }
       $n | Add-Member -Force min $h; $n | Add-Member -Force max $h
       @($n.children) | Where-Object { $_.id -eq "sidebar" } | ForEach-Object { $_ | Add-Member -Force hidden $true }
     }
