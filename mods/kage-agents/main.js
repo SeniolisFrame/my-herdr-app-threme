@@ -88,7 +88,7 @@ const STATUS_MOVE = { done: "done", blocked: "plead" };
 const openSortMenu = () => openOverlay({ mod: "kage-agents", kind: "popup", width: 200, height: 470, props: { sortMenu: true } });
 const FACE = 96;
 const BEAT = 125, FRAMES = 9; // ms per cast frame, frames
-const FIRE = 250, CAMP = 4; // ms per campfire frame; witches round one fire (more show as "+N")
+const FIRE = 250, CAMP = 8; // ms per campfire frame; witches round one fire (more show as "+N")
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
@@ -342,7 +342,7 @@ export default class Agents extends View {
   }
 
   // props.board (my-herdr-app's top band, through kage-layout.ps1): the open space's camp, a twilight forest
-  // (forest-bg.png, 1920x222, a different stretch of it per space) with a campfire in the middle and that
+  // (forest-bg.png, 2080x200: avatars/pixellab/forest.png widened with mirrored edges, one moon; a different stretch of it per space) with a campfire in the middle and that
   // space's witches round it: asleep while the agent idles, casting while it works (no monster yet).
   // It sets no agent order: next / previous follow the sidebar's.
   board(t, list, now, step) {
@@ -365,15 +365,19 @@ export default class Agents extends View {
       .text_color(t.muted).hover((s) => s.text_color(t.foreground))
       .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 220, height: 50 + 31 * Math.max(1, Math.min(10, n)), props: { campMenu: sp.id } }))
       .child(div().child(`terminals (${n})`))
-      .child(image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64));
+      // Its light on the ground (campfire-glow, 400x40, centred at 200,16: the middle of the stone ring), under it.
+      .child(div().relative().w(64).h(64)
+        .child(image(`mods/kage-agents/campfire-glow-${this.fire % 6}.png`).absolute().left(-168).top(36).w(400).h(40))
+        .child(image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64)));
     const camp = (sp) => {
       // The most urgent first, so a NEEDS YOU agent is never the one left out.
       const all = list.filter((a) => a.space === sp.id).sort((x, y) => this.rank(y) - this.rank(x) || this.since(y) - this.since(x));
-      const here = all.slice(0, CAMP), more = all.length - here.length;
+      // Then each keeps its place by the fire (by address, which never changes): a status change doesn't move it.
+      const here = all.slice(0, CAMP).sort((x, y) => x.address.localeCompare(y.address, undefined, { numeric: true })), more = all.length - here.length;
       const left = here.filter((_a, k) => k % 2 === 0), right = here.filter((_a, k) => k % 2 === 1);
       return div().id(`camp-${sp.id}`).relative().flex_1().min_w(0).h_full().overflow_hidden().bg("#0a1226")
         // Twice side by side: the band can be wider than one picture (no sidebar on a 1920px screen).
-        .children([0, 1920].map((x) => image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(x - (sp.index * 90) % 270).w(1920).h(222)))
+        .children([0, 2080].map((x) => image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(x - (sp.index * 90) % 270).w(2080).h(200)))
         .child(h_flex().absolute().left(0).right(0).bottom(6).gap(48).justify_center().items_end()
           .children(left.reverse().map(witch)).child(fire(sp)).children(right.map(witch))
           .when(more > 0, (el) => el.child(div().mb(40).text_color(t.muted).child(`+${more}`))))

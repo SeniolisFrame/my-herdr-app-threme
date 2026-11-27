@@ -40,3 +40,21 @@ for k in range(N):
             q[x, ny] = px[x, y]
     im.save(out / f"campfire-{k}.png")
 print(len(ramp), "flame colours,", len(sparks), "sparks")
+
+# The light round the fire, on the ground only: a flat warm oval in hard bands (pixel art, no smooth
+# fade), cut at the ground's top edge, a little wider or narrower each frame with the flames.
+# 1/4 size, drawn x4: campfire-glow-0..5.png, 400x40, the middle of the fire's ring at 200,16.
+GW, GH, CX, CY = 100, 10, 50, 4  # CY: the middle of the stone ring; the rows above it are the ground up to the trees
+BANDS = ((0.35, 44), (0.6, 30), (0.85, 17), (1.0, 7))  # (how far out, alpha)
+for k in range(N):
+    s = 1 + 0.05 * math.sin(k * 2 * math.pi / N)
+    im = Image.new("RGBA", (GW, GH)); q = im.load()
+    for y in range(GH):
+        for x in range(GW):
+            t = math.hypot((x - CX) / (48 * s), (y - CY) / (9 * s))
+            a = next((al for r, al in BANDS if t < r), 0)
+            # Where two bands meet, a checkerboard of both: a dithered edge.
+            nxt = next((r for r, _ in BANDS if t < r), None)
+            if a and nxt and nxt - t < 0.04 and (x + y) % 2: a = next((al for r, al in BANDS if r > nxt), 0)
+            q[x, y] = (255, 150, 60, a) if a else (0, 0, 0, 0)
+    im.resize((GW * 4, GH * 4), Image.NEAREST).save(out / f"campfire-glow-{k}.png")
