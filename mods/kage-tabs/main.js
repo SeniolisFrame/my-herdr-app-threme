@@ -1,6 +1,6 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
-import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
+import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings, props, focused } from "herdr";
 import { PIXEL, NAME, find, clean, folder } from "./kage.js";
 
 // kage: the tab bar in the 8-bit Spaces list's style (mods/kage-spaces): VGA pixel font at its native 16px,
@@ -82,9 +82,36 @@ export default class Tabs extends View {
     localStorage.setItem("panels", JSON.stringify(this.panels));
   }
 
+  // props.work (the my-herdr layout, under the board): Terminal / Files / Changes, one at a time in "work-stack".
+  work(t, root) {
+    const now = find(root, "work-stack")?.active ?? "main";
+    // A pane focused from elsewhere (a witch card, a key) wants its terminal shown.
+    const pane = focused()?.pane ?? null;
+    // A full window (the board hidden) stays full across tabs; showing the panels undoes an older full's hidden ones.
+    // follow: the pane already has the focus, only its tab is shown.
+    const go = (id, cx, follow = false) => {
+      for (const n of ["main", "files", "changes"]) run("layout.show", { id: n });
+      run("layout.select", { stack: "work-stack", child: id });
+      // Keys (Esc out of a full window) go to what's shown. A panel takes its focus command
+      // only once the stack has loaded it, so a beat later.
+      if (id === "main") { if (pane && !follow) run("pane.focus", { pane }); }
+      else cx.spawn(async (cx) => { await cx.sleep(100); run(`my-${id}.focus`); });
+    };
+    // Only a pane taking over counts: no pane for a moment (the window in the background) and back isn't a new focus.
+    if (pane && pane !== this.pane) { const first = this.pane === undefined; this.pane = pane; if (!first && now !== "main") go("main", null, true); }
+    const item = (id, label) => h_flex().id(`work-${id}`).h(29).px(10).rounded(7).items_center().flex_none().relative()
+      .bg(id === now ? t.selected : t.chrome).text_color(id === now ? t.accent : t.muted).hover(s => s.bg(t.hover))
+      .on_click((_e, cx) => go(id, cx))
+      .when(id === now, el => el.child(div().absolute().left(8).right(8).bottom(0).h(2).bg(t.accent)))
+      .child(label);
+    return h_flex().size_full().px(10).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border).font_family(PIXEL).text_size(PX)
+      .child(item("main", "Terminal")).child(item("files", "Files")).child(item("changes", "Changes"));
+  }
+
   render() {
     const t = theme();
     const root = layout(), sidebar = find(root, "sidebar"), w = window();
+    if (props()?.work) return this.work(t, root);
     const bySpace = Boolean(sidebar?.hidden);
     this.unit = bySpace ? "space" : "tab";
     const space = spaces().find(p => p.active);

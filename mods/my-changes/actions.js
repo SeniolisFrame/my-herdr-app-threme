@@ -1,6 +1,6 @@
 // Changes: what the buttons do (stage, discard, commit, remote, stash, branches).
-import { exec, readTextFile, writeTextFile, appHome, setShared, agents } from "herdr";
-import { READ, git, sendToChat, chatTerminal } from "./common.js";
+import { exec, readTextFile, writeTextFile, appHome, setShared, agents, run } from "herdr";
+import { READ, git, sendToChat, chatTerminal, stacked } from "./common.js";
 import { oneHunk, someLines, toCrlf } from "./patch.js";
 import { NET, CONFLICTS, ASK_FILE, sides, moveSide } from "./status.js";
 
@@ -141,7 +141,11 @@ export const actionsMethods = {
 
   // Files opens the file (my-files watches this shared value).
   // Files must show to take the request (a hidden panel doesn't draw); it then takes the whole window.
-  openInFiles(path) { this.setFull(false); setShared("my-files.open", { path: `${this.root}/${path}`, n: Date.now() }); },
+  openInFiles(path) {
+    this.setFull(false);
+    if (stacked()) run("layout.select", { stack: "work-stack", child: "files" }); // under the board's tabs: Files' tab
+    setShared("my-files.open", { path: `${this.root}/${path}`, n: Date.now() });
+  },
 
   commit(cx) {
     const message = this.message.value().trim(), staged = this.files.some((f) => sides(f).some((x) => x.side === "staged"));

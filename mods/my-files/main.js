@@ -2,8 +2,8 @@
 // search every file, see blame and history, and send @path to the chat.
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, Editor, InputState } from "gpui-base";
-import { theme, settings, nextCommand, shared } from "herdr";
-import { framed, rad, locationKey, focusChat, diffRow, button, iconButton, buttonGroup, textInput, lazyRows, foldPanel, trackWidth, foldedStrip, menuBox, sz, loadTextSizes, isFull, setFull } from "./common.js";
+import { theme, settings, nextCommand, shared, run } from "herdr";
+import { framed, rad, locationKey, focusChat, diffRow, button, iconButton, buttonGroup, textInput, lazyRows, foldPanel, trackWidth, foldedStrip, stacked, menuBox, sz, loadTextSizes, isFull, setFull } from "./common.js";
 import { TOTAL } from "./tree.js";
 import { iconFor } from "./icons.js";
 import { blameBlocks, ago, hitSegments } from "./text.js";
@@ -253,7 +253,8 @@ export default class Files extends View {
       if (this.folded) foldPanel(this, "files", false); // folded: open to show it (first: the open's full window then wins)
       if (this.dirty()) this.note = "Save or close the open file first";
       else this.open(this.rel(asked.path), null, cx);
-      this.handle.focus(); // the keys (Esc) now go to Files, not the hidden Changes
+      // The keys (Esc) now go to Files, not the hidden Changes. Focus can't move during render: its own command, a beat later.
+      cx.spawn(async (cx) => { await cx.sleep(100); run("my-files.focus"); });
     }
     const t = theme(), file = this.file, dirty = this.dirty(), full = this.isFull();
     if (this.folded) return foldedStrip("files", "»", "Show Files", t, () => foldPanel(this, "files", false))
@@ -268,7 +269,7 @@ export default class Files extends View {
         .child(button("files-new", "+", t, (_e, cx) => this.openMenu("", cx), { active: this.menu?.path === "", name: "New file or folder" })))
       // No file over the whole window (left so by a restart): a way back to the panels.
       .when(!file && full, el => el.child(button("files-full", "⤡", t, () => this.setFull(false), { active: true, name: "Back to the panels (Esc)" })))
-      .when(!full, el => el.child(button("files-fold", "«", t, () => foldPanel(this, "files", true), { name: "Hide Files" })));
+      .when(!full && !stacked(), el => el.child(button("files-fold", "«", t, () => foldPanel(this, "files", true), { name: "Hide Files" })));
     // The find box gets a row of its own; too narrow for the names, the buttons show icons only.
     const fileBar = file && v_flex().flex_none().px(10).py(6).gap(6).when(!this.showReplace, el => el.border_b(1).border_color(t.border))
       .child(h_flex().id("files-bar").gap(6).items_center().flex_wrap()

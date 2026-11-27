@@ -27,6 +27,12 @@ function leadPanes(all) {
   return leads;
 }
 
+// A space's tabs with a terminal but no agent (a new terminal, an agent that hasn't reported).
+function idleTabs(sp) {
+  const leads = leadPanes(panes()), busy = new Set(agents().map((a) => a.tab));
+  return sp.tabs.map((tab) => ({ tab, p: leads.get(tab.id) })).filter((g) => g.p && !busy.has(g.tab.id));
+}
+
 function title(tab, l) {
   const prog = l?.program?.name;
   const live = clean(l?.title);
@@ -255,6 +261,21 @@ export default class Agents extends View {
         own.move === m.id, () => pick(address, "move", m.id))));
   }
 
+  // A click on a camp's fire: its terminals with no agent yet, by name; a click goes there.
+  campMenu(t, id) {
+    const sp = spaces().find((s) => s.id === id), row = menuRow(t);
+    const tabs = sp ? idleTabs(sp) : [];
+    return v_flex().size_full().p(5).bg(t.popover).text_size(12.8)
+      .child(menuHead(t)(sp ? `${sp.name}: no agent yet` : "Space closed", 4))
+      .when(tabs.length === 0, (el) => el.child(div().px(8).py(6).text_color(t.dim).child("Every terminal has an agent")))
+      .child(v_flex().id("camp-list").flex_1().min_h(0).overflow_y_scrollbar().children(tabs.map(({ tab, p }) => row(`camp-tab-${tab.id}`, tab.named ? tab.name : folder(p.cwd) ?? tab.name,
+        svg("mods/workspace-chrome/terminal.svg").size(14).flex_none().text_color(t.muted), p.focused, () => run("pane.focus", { pane: p.pane }))
+        // ✕ closes that terminal's tab; the menu stays open for the rest.
+        .child(div().id(`camp-close-${tab.id}`).p(3).rounded(4).flex_none().text_color(t.dim).hover((s) => s.bg(t.hover).text_color(t.foreground))
+          .tooltip("Close this terminal").on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: tab.id }); cx.notify(); })
+          .child(svg("mods/workspace-chrome/x.svg").size(12))))));
+  }
+
   // The witch's picture now: dozing while the agent idles, else its move (or done / plead). Notes who is
   // awake or asleep, so the frame timer redraws only when a shown frame changes.
   frame(a, step) {
@@ -338,8 +359,13 @@ export default class Agents extends View {
         .child(div().max_w(160).truncate().text_color(a.focused ? t.foreground : t[a.status] ?? t.muted).child(name))
         .child(image(this.frame(a, step)).w(FACE).h(FACE));
     };
-    // The fire: campfire-0..5.png (avatars/campfire.py), a frame a beat.
-    const fire = () => image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64).flex_none();
+    // The fire: campfire-0..5.png (avatars/campfire.py), a frame a beat. A click lists the space's
+    // terminals with no agent yet (a new one has no witch to click).
+    const fire = (sp, n = idleTabs(sp).length) => v_flex().id(`fire-${sp.id}`).flex_none().items_center().cursor_pointer().tooltip(`${sp.name}: terminals with no agent`)
+      .text_color(t.muted).hover((s) => s.text_color(t.foreground))
+      .on_click(() => openOverlay({ mod: "kage-agents", kind: "popup", width: 220, height: 50 + 31 * Math.max(1, Math.min(10, n)), props: { campMenu: sp.id } }))
+      .child(div().child(`terminals (${n})`))
+      .child(image(`mods/kage-agents/campfire-${this.fire % 6}.png`).w(64).h(64));
     const camp = (sp) => {
       // The most urgent first, so a NEEDS YOU agent is never the one left out.
       const all = list.filter((a) => a.space === sp.id).sort((x, y) => this.rank(y) - this.rank(x) || this.since(y) - this.since(x));
@@ -349,7 +375,7 @@ export default class Agents extends View {
         // Twice side by side: the band can be wider than one picture (no sidebar on a 1920px screen).
         .children([0, 1920].map((x) => image("mods/kage-agents/forest-bg.png").absolute().bottom(0).left(x - (sp.index * 90) % 270).w(1920).h(222)))
         .child(h_flex().absolute().left(0).right(0).bottom(6).gap(48).justify_center().items_end()
-          .children(left.reverse().map(witch)).child(fire()).children(right.map(witch))
+          .children(left.reverse().map(witch)).child(fire(sp)).children(right.map(witch))
           .when(more > 0, (el) => el.child(div().mb(40).text_color(t.muted).child(`+${more}`))))
         .child(div().absolute().left(8).top(6).px(4).bg("#0a1226cc").text_color(NAME[ink[sp.id]] ?? t.accent).child(sp.name));
     };
@@ -363,6 +389,7 @@ export default class Agents extends View {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
     if (props()?.agentMenu) return this.agentMenu(t, props().agentMenu);
+    if (props()?.campMenu) return this.campMenu(t, props().campMenu);
     const cols = { ...(shared("space.colors") ?? {}) };
     const named = Object.keys(cols).filter((k) => !cols[k].startsWith("#"));
     for (const k of named) {

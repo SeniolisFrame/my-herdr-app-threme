@@ -2,7 +2,7 @@
 import { div } from "gpui-kit";
 import { v_flex, h_flex, Input, Scrollbar } from "gpui-base";
 import { settings } from "herdr";
-import { rad, diffRow, button, iconButton, buttonGroup, textInput, lazyRows, foldPanel, menuBox, checkbox, confirmButton, sz } from "./common.js";
+import { rad, diffRow, button, iconButton, buttonGroup, textInput, lazyRows, foldPanel, stacked, menuBox, checkbox, confirmButton, sz } from "./common.js";
 
 export const viewMethods = {
   fileRow(item, t) {
@@ -87,9 +87,9 @@ export const viewMethods = {
     // » on the edge next to the chat, as Files' « is: both fold buttons sit where the eye is.
     return h_flex().h(40).flex_none().border_b(1).border_color(t.border)
       // Over the whole window: Back sits there instead, top left as Files' Back does.
-      .child(div().flex_none().px(8).flex().items_center().border_r(1).border_color(t.border).child(this.isFull()
+      .when(this.isFull() || !stacked(), (el) => el.child(div().flex_none().px(8).flex().items_center().border_r(1).border_color(t.border).child(this.isFull()
         ? button("changes-back", "← Back", t, () => this.setFull(false), { name: "Back to the panels (Esc)" })
-        : button("changes-fold", "»", t, () => foldPanel(this, "changes", true), { name: "Hide Changes" })))
+        : button("changes-fold", "»", t, () => foldPanel(this, "changes", true), { name: "Hide Changes" }))))
       .child(tab("changes", "Changes", !onLog, (_e, cx) => { this.view = "changes"; this.menu = null; cx.notify(); }, count))
       .child(tab("history", "History", onLog, (_e, cx) => { this.menu = null; if (this.view === "changes") this.openLog(cx); else { this.view = "log"; cx.notify(); } }));
   },

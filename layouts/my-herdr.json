@@ -97,63 +97,75 @@
             "resizable": false,
             "children": [
                 {
+                    "id": "work-tabs",
+                    "type": "block",
+                    "size": {
+                        "px": 36
+                    },
+                    "min": 36,
+                    "max": 36,
+                    "content": {
+                        "mod": "tabs",
+                        "props": {
+                            "work": true
+                        }
+                    }
+                },
+                {
                     "id": "work-body",
                     "type": "row",
                     "padding": 8,
                     "gap": 8,
                     "children": [
                         {
-                            "id": "files",
-                            "type": "block",
-                            "size": {
-                                "px": 360
-                            },
-                            "min": 36,
-                            "max": 4000,
-                            "content": {
-                                "mod": "my-files"
-                            }
-                        },
-                        {
-                            "id": "main",
-                            "type": "block",
-                            "content": {
-                                "tab": "active",
-                                "pane": {
-                                    "gap": 8,
-                                    "radius": 10,
-                                    "background": "background",
-                                    "lone": true,
-                                    "border": {
-                                        "width": 1,
-                                        "color": "border"
-                                    },
-                                    "focus": {
-                                        "width": 1,
-                                        "color": "accent"
-                                    },
-                                    "header": {
-                                        "content": {
-                                            "mod": "pane"
-                                        },
-                                        "height": 30,
-                                        "position": "top",
-                                        "reveal": "always"
+                            "id": "work-stack",
+                            "type": "stack",
+                            "active": "main",
+                            "children": [
+                                {
+                                    "id": "main",
+                                    "type": "block",
+                                    "content": {
+                                        "tab": "active",
+                                        "pane": {
+                                            "gap": 8,
+                                            "radius": 10,
+                                            "background": "background",
+                                            "lone": true,
+                                            "border": {
+                                                "width": 1,
+                                                "color": "border"
+                                            },
+                                            "focus": {
+                                                "width": 1,
+                                                "color": "accent"
+                                            },
+                                            "header": {
+                                                "content": {
+                                                    "mod": "pane"
+                                                },
+                                                "height": 30,
+                                                "position": "top",
+                                                "reveal": "always"
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "id": "files",
+                                    "type": "block",
+                                    "content": {
+                                        "mod": "my-files"
+                                    }
+                                },
+                                {
+                                    "id": "changes",
+                                    "type": "block",
+                                    "content": {
+                                        "mod": "my-changes"
                                     }
                                 }
-                            }
-                        },
-                        {
-                            "id": "changes",
-                            "type": "block",
-                            "size": {
-                                "px": 460
-                            },
-                            "min": 36,
-                            "max": 4000,
-                            "content": {
-                                "mod": "my-changes"
-                            }
+                            ]
                         }
                     ]
                 },

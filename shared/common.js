@@ -128,17 +128,30 @@ export function lazyRows(id, count, row, o = {}) {
 // Folding a side panel into a thin strip and back: its layout node is resized; the panel keeps
 // all its state (open file, edits, lists) and carries on refreshing, it only draws the strip.
 export const FOLDED = 36;
-export function foldPanel(view, node, fold) { run("layout.resize", { id: node, px: fold ? FOLDED : view.openWidth }); }
+// Under the board's Terminal / Files / Changes tabs (my-herdr's work-stack) a panel has the width to itself: no fold.
+export const stacked = () => Boolean(findNode(layout(), "work-stack"));
+export function foldPanel(view, node, fold) { if (!stacked()) run("layout.resize", { id: node, px: fold ? FOLDED : view.openWidth }); }
 
 // Full window for one side panel: the layout's other blocks are hidden and the panel takes the room.
 // Hidden is the layout's own state, so it holds across a restart; the layout names these blocks.
 const PANELS = ["top", "main", "files", "changes"];
 const findNode = (node, id) => node?.id === id ? node : (node?.children ?? []).reduce((hit, c) => hit ?? findNode(c, id), null);
-export const isFull = (node) => { const l = layout(); return Boolean(findNode(l, "main")?.hidden && !findNode(l, node)?.hidden); };
+// Under the work-stack's tabs the stack already shows one panel: full is the board (top) hidden with this panel the one shown.
+export const isFull = (node) => {
+  const l = layout(), stack = findNode(l, "work-stack");
+  if (stack) return Boolean(findNode(l, "top")?.hidden && stack.active === node);
+  return Boolean(findNode(l, "main")?.hidden && !findNode(l, node)?.hidden);
+};
 // The width to go back to is kept in shared state: the other panel may be the one that ends it
 // (Changes' Open shows the file in Files over the whole window, in place of Changes).
 export function setFull(view, node, on) {
   if (on === isFull(node) || !findNode(layout(), "main")) return;
+  // The stack's tabs must stay switchable: hide only the board, and show the panel's tab.
+  if (stacked()) {
+    if (on) { run("layout.select", { stack: "work-stack", child: node }); run("layout.hide", { id: "top" }); }
+    else for (const id of PANELS) run("layout.show", { id });
+    return;
+  }
   const other = PANELS.find((id) => id !== node && (id === "files" || id === "changes") && isFull(id));
   if (other) run("layout.resize", { id: other, px: shared(`my-herdr.width.${other}`) ?? (other === "changes" ? 460 : 360) }); // none saved (a restart): the layout's widths
   if (on) { setShared(`my-herdr.width.${node}`, view.openWidth); run("layout.show", { id: node }); }
